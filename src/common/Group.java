@@ -11,7 +11,7 @@ import static org.lwjgl.opengl.GL11.GL_TRIANGLE_STRIP;
 
 public class Group {
     public abstract static class Item {
-
+        public abstract void appendToBuff(BufferBuilder2f builder2f);
     }
 
     private final ArrayList<Item> items = new ArrayList<>();
@@ -32,6 +32,11 @@ public class Group {
     }
 
     public void renderAll() {
+        builder2f.clear();
+        for (Item item : items) {
+            item.appendToBuff(builder2f);
+        }
+
         sh.bind();
         Renderer.draw(GL_TRIANGLE_STRIP, va, builder2f.getVertexCount());
     }
