@@ -1,11 +1,16 @@
 package common;
 
+import Interactables.ButtonGroup;
 import boilerplate.common.GameBase;
 import boilerplate.common.TimeStepper;
 import boilerplate.common.Window;
 import boilerplate.rendering.Renderer;
+import boilerplate.rendering.text.FontManager;
+import boilerplate.rendering.text.TextRenderer;
 import boilerplate.utility.Vec2;
 import org.lwjgl.glfw.GLFW;
+
+import java.awt.*;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -19,6 +24,11 @@ public class Game extends GameBase {
     int[] heldMouseKeys = new int[8];
     int[] heldKeys = new int[350];
 
+    TextRenderer.TextObject to1;
+    TextRenderer textRenderer = new TextRenderer();
+
+    ButtonGroup buttons = new ButtonGroup();
+
     @Override
     public void start() {
         this.timeStarted = (double)System.currentTimeMillis();
@@ -27,21 +37,26 @@ public class Game extends GameBase {
 
     @Override
     public void createCapabilitiesAndOpen() {
-        winOptions.initWindowSize = new Vec2(1000, 600).toDim();
+        winOptions.initWindowSize = Constants.SCREEN_SIZE;
         winOptions.title = "searching my mind";
         window.setOptions(winOptions);
 
         window.setup();
         Renderer.setupGLContext();
         window.show();
+
+        FontManager.init();
+        FontManager.loadFont(Font.MONOSPACED, Font.BOLD, 24, true);
+        FontManager.generateAndBindAllFonts(Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
+
         bindEvents();
+        setupBuffers();
     }
 
     @Override
     public void mainLoop(double dt) {
-        Renderer.clearScreen();
         GLFW.glfwPollEvents();
-        Renderer.finish(window);
+        render();
     }
 
     @Override
@@ -69,5 +84,21 @@ public class Game extends GameBase {
                 if (button == 0) this.mousePosOnClick.set(this.mousePos);
             }
         });
+    }
+
+    public void setupBuffers() {
+        textRenderer.setupBufferObjects();
+        to1 = new TextRenderer.TextObject(1, "some string", new Vec2(300), Color.CYAN, Color.DARK_GRAY);
+        textRenderer.pushTextObject(to1);
+
+        buttons.setupBufferObjects();
+        buttons.addButton(new ButtonGroup.Button(new Vec2(50), new Vec2(50), "haha"));
+    }
+
+    public void render() {
+        Renderer.clearScreen();
+        buttons.renderAll();
+        textRenderer.draw();
+        Renderer.finish(window);
     }
 }
