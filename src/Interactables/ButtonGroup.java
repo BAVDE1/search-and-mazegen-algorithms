@@ -62,9 +62,10 @@ public class ButtonGroup {
     public void mouseClicked() {
         for (Button btn : buttons) {
             if (btn instanceof ToggleButton toggleBtn) {
-                if (radioToggles) toggleAll(false);
-                if (!btn.isMouseHovering) continue;
+                if (!btn.isMouseHovering || (radioToggles && toggleBtn.toggled)) continue;
+                if (radioToggles) toggleAll(false, toggleBtn);
                 toggleBtn.toggle();
+                hasChanged = true;
                 break;
             }
             if (!btn.isMouseHovering) continue;
@@ -74,8 +75,13 @@ public class ButtonGroup {
     }
 
     public void toggleAll(boolean val) {
+        toggleAll(val, null);
+    }
+
+    public void toggleAll(boolean val, ToggleButton exclude) {
         for (Button btn : buttons) {
             if (btn instanceof ToggleButton toggleBtn) {
+                if (exclude != null && toggleBtn == exclude) continue;
                 toggleBtn.toggle(val);
             }
         }

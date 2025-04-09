@@ -14,8 +14,9 @@ public class ToggleButton extends Button {
     }
 
     public void toggle(boolean val) {
+        if (val == toggled) return;
         toggled = val;
-        isWobbling = val;
+        if (isWobbling && !isMouseHovering) isWobbling = val;
         fireCallbacks();
     }
 

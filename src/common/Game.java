@@ -106,6 +106,7 @@ public class Game extends GameBase {
         Button b2 = new ToggleButton(new Vec2(120), new Vec2(80, 120), "uuhhhh");
         b2.color = Color.RED;
         buttons.addButton(b1, b2);
+        buttons.radioToggles = true;
     }
 
     public void render() {
