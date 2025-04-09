@@ -5,6 +5,7 @@ layout(location = 0) in vec2 pos;
 layout(location = 1) in vec2 texturePos;
 layout(location = 2) in vec4 colour;
 layout(location = 3) in float isMouseHovering;
+layout(location = 4) in float wobbleIndex;
 
 uniform mat4 projectionMatrix;
 uniform float time;
@@ -14,9 +15,11 @@ out vec4 v_colour;
 out float v_isMouseHovering;
 
 void main() {
-    float s = sin(time) * 20;
-    float c = cos(time) * 20;
-    vec2 wobble = vec2(s, c) * isMouseHovering;
+    // hovering wobble
+    float t = time * 5 + (wobbleIndex * .8);
+    vec2 wobble = vec2(sin(t), cos(t)) * 8 * isMouseHovering;
+
+    // regular
     gl_Position = vec4(pos.xy + wobble, 1, 1) * projectionMatrix;
     v_texturePos = texturePos;
     v_colour = colour;

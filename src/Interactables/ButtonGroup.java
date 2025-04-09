@@ -8,6 +8,7 @@ import common.Constants;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.opengl.GL11.*;
@@ -35,11 +36,9 @@ public class ButtonGroup {
 
         public void appendToBufferBuilder(BufferBuilder2f sb) {
             // outline
-            float[] colors = new float[] {-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0};
+            float[] additionalFloats = new float[] {-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0, 0};
 
-//            colors[colors.length-1] = 1;
-//            colors[colors.length-2] = 0;
-            Shape2d.Poly outlinePoly = Shape2d.createRectOutline(pos, size, 3, new ShapeMode.Append(colors));
+            Shape2d.Poly outlinePoly = Shape2d.createRectOutline(pos, size, 3, new ShapeMode.Append(additionalFloats));
             sb.pushSeparatedPolygon(outlinePoly);
 
             int textHeight = font.glyphMap.get(' ').height;
@@ -57,7 +56,7 @@ public class ButtonGroup {
                     Vec2 topLeft = new Vec2(pos.x + accumulatedX, yPosMiddle);
 
                     Shape2d.Poly texturePoints = Shape2d.createRect(glyph.texTopLeft, glyph.texSize);
-                    float[] colorVars = new float[] {color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0};
+                    float[] colorVars = new float[] {color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0, 0};
 
                     ShapeMode.UnpackAppend mode = new ShapeMode.UnpackAppend(texturePoints.toArray(), colorVars);
                     Shape2d.Poly charPoly = Shape2d.createRect(topLeft, size, mode);
@@ -73,8 +72,9 @@ public class ButtonGroup {
 
             // hovering
             if (isMouseInBounds) {
-                colors[colors.length-1] = 1;
-                Shape2d.Poly poly = Shape2d.createRect(pos, size, new ShapeMode.Append(colors));
+                float[] colorFloats = new float[] {-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 1};
+                java.util.List<float[]> wobbleIndexes = List.of(new float[] {0}, new float[] {1}, new float[] {2}, new float[] {3});
+                Shape2d.Poly poly = Shape2d.createRect(pos, size, new ShapeMode.AppendUnpack(colorFloats, wobbleIndexes));
                 sb.pushSeparatedPolygon(poly);
             }
         }
@@ -101,6 +101,7 @@ public class ButtonGroup {
         vaLayout.pushFloat(2);  // texture pos
         vaLayout.pushFloat(4);  // color
         vaLayout.pushFloat(1);  // is mouse hovering
+        vaLayout.pushFloat(1);  // wobble index
         va.pushBuffer(vb, vaLayout);
 
         sb.setAutoResize(true);
