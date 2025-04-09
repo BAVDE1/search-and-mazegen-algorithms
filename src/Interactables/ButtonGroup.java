@@ -32,7 +32,7 @@ public class ButtonGroup {
         vaLayout.pushFloat(2);  // pos
         vaLayout.pushFloat(2);  // texture pos
         vaLayout.pushFloat(4);  // color
-        vaLayout.pushFloat(1);  // is mouse hovering
+        vaLayout.pushFloat(1);  // is wobbling
         vaLayout.pushFloat(1);  // wobble index
         va.pushBuffer(vb, vaLayout);
 
