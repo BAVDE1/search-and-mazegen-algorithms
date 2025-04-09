@@ -13,6 +13,7 @@ import org.lwjgl.glfw.GLFW;
 import java.awt.*;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
 
 public class Game extends GameBase {
     public Window window = new Window();
@@ -46,7 +47,7 @@ public class Game extends GameBase {
         window.show();
 
         FontManager.init();
-        FontManager.loadFont(Font.MONOSPACED, Font.BOLD, 24, true);
+        FontManager.loadFont(Font.MONOSPACED, Font.BOLD, 18, true);
         FontManager.generateAndBindAllFonts(Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
 
         bindEvents();
@@ -82,7 +83,12 @@ public class Game extends GameBase {
             if (action == 1) {
                 this.heldMouseKeys[button] = 1;
                 if (button == 0) this.mousePosOnClick.set(this.mousePos);
+                buttons.mouseClicked();
             }
+        });
+        glfwSetCursorPosCallback(window.handle, (window, xPos, yPos) -> {
+            mousePos.set((float) xPos, (float) yPos);
+            buttons.updateMouse(mousePos);
         });
     }
 
@@ -92,12 +98,21 @@ public class Game extends GameBase {
         textRenderer.pushTextObject(to1);
 
         buttons.setupBufferObjects();
-        buttons.addButton(new ButtonGroup.Button(new Vec2(50), new Vec2(50), "haha"));
+
+        ButtonGroup.Button b1 = new ButtonGroup.Button(new Vec2(50), new Vec2(100, 50), "haha");
+        b1.color = Color.CYAN;
+        ButtonGroup.Button b2 = new ButtonGroup.Button(new Vec2(120), new Vec2(80, 120), "uuhhhh");
+        b2.color = Color.RED;
+        buttons.addButton(b1, b2);
     }
 
     public void render() {
         Renderer.clearScreen();
+
+        glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
         buttons.renderAll();
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         textRenderer.draw();
         Renderer.finish(window);
     }

@@ -1,24 +1,26 @@
 package Interactables;
 
-import boilerplate.common.BoilerplateConstants;
 import boilerplate.rendering.*;
-import boilerplate.rendering.Shape;
+import boilerplate.rendering.text.FontManager;
 import boilerplate.utility.Vec2;
-import boilerplate.utility.Vec4;
 import common.Constants;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static org.lwjgl.opengl.GL11.GL_TRIANGLE_STRIP;
+import static org.lwjgl.glfw.GLFW.glfwGetTime;
+import static org.lwjgl.opengl.GL11.*;
 
 public class ButtonGroup {
     public static class Button {
         public Vec2 pos;
         public Vec2 size;
         public String text;
-        public Color color = Color.WHITE;
+        public Color color = Color.white;
+        public FontManager.LoadedFont font = FontManager.getLoadedFont(1);
+
+        public boolean isMouseInBounds = false;
 
         public Button(Vec2 pos, Vec2 size, String text) {
             this.pos = pos;
@@ -26,15 +28,55 @@ public class ButtonGroup {
             this.text = text;
         }
 
+        public boolean isPointInBounds(Vec2 point) {
+            return pos.x < point.x && point.x < pos.x + size.x &&
+                    pos.y < point.y && point.y < pos.y + size.y;
+        }
+
         public void appendToBufferBuilder(BufferBuilder2f sb) {
-            Shape.Quad q = Shape.createRect(pos, size);
-            Vec4 c = new Vec4(color);
-            sb.pushRawSeparatedVertices(new float[] {
-                    q.a.x, q.a.y, -1, -1, c.x, c.y, c.z, c.w,
-                    q.b.x, q.b.y, -1, -1, c.x, c.y, c.z, c.w,
-                    q.c.x, q.c.y, -1, -1, c.x, c.y, c.z, c.w,
-                    q.d.x, q.d.y, -1, -1, c.x, c.y, c.z, c.w
-            });
+            // outline
+            float[] colors = new float[] {-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0};
+
+//            colors[colors.length-1] = 1;
+//            colors[colors.length-2] = 0;
+            Shape2d.Poly outlinePoly = Shape2d.createRectOutline(pos, size, 3, new ShapeMode.Append(colors));
+            sb.pushSeparatedPolygon(outlinePoly);
+
+            int textHeight = font.glyphMap.get(' ').height;
+            float textWidth = font.findLineWidth(text);
+
+            // text
+            if (text != null && !text.isEmpty()) {
+                float accumulatedX = size.x * .5f - textWidth * .5f;
+                float yPosMiddle = pos.y + (size.y * .5f - textHeight * .5f);
+                boolean initial = true;
+
+                for (char c : text.toCharArray()) {
+                    FontManager.Glyph glyph = font.getGlyph(c);
+                    Vec2 size = new Vec2(glyph.width, glyph.height);
+                    Vec2 topLeft = new Vec2(pos.x + accumulatedX, yPosMiddle);
+
+                    Shape2d.Poly texturePoints = Shape2d.createRect(glyph.texTopLeft, glyph.texSize);
+                    float[] colorVars = new float[] {color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0};
+
+                    ShapeMode.UnpackAppend mode = new ShapeMode.UnpackAppend(texturePoints.toArray(), colorVars);
+                    Shape2d.Poly charPoly = Shape2d.createRect(topLeft, size, mode);
+
+                    if (initial) {
+                        sb.pushSeparatedPolygon(charPoly);
+                        initial = false;
+                    }
+                    else sb.pushPolygon(charPoly);
+                    accumulatedX += (int) size.x;
+                }
+            }
+
+            // hovering
+            if (isMouseInBounds) {
+                colors[colors.length-1] = 1;
+                Shape2d.Poly poly = Shape2d.createRect(pos, size, new ShapeMode.Append(colors));
+                sb.pushSeparatedPolygon(poly);
+            }
         }
     }
 
@@ -45,7 +87,7 @@ public class ButtonGroup {
     private final VertexBuffer vb = new VertexBuffer();
     private final BufferBuilder2f sb = new BufferBuilder2f();
 
-    private boolean hasChanged = false;
+    public boolean hasChanged = false;
 
     public void setupBufferObjects() {
         sh.autoInitializeShadersMulti("shaders/button.glsl");
@@ -58,20 +100,39 @@ public class ButtonGroup {
         vaLayout.pushFloat(2);  // pos
         vaLayout.pushFloat(2);  // texture pos
         vaLayout.pushFloat(4);  // color
+        vaLayout.pushFloat(1);  // is mouse hovering
         va.pushBuffer(vb, vaLayout);
 
         sb.setAutoResize(true);
         sb.setAdditionalVertFloats(vaLayout.getTotalItems() - 2);  // minus pos
     }
 
-    public void addButton(Button btn) {
-        buttons.add(btn);
+    public void addButton(Button ...btns) {
+        buttons.addAll(Arrays.asList(btns));
         hasChanged = true;
     }
 
     public void clear() {
         buttons.clear();
         hasChanged = true;
+    }
+
+    public void updateMouse(Vec2 mousePos) {
+        for (Button btn : buttons) {
+            boolean within = btn.isPointInBounds(mousePos);
+            if (within != btn.isMouseInBounds) {
+                btn.isMouseInBounds = within;
+                hasChanged = true;
+            }
+        }
+    }
+
+    public void mouseClicked() {
+        for (Button btn : buttons) {
+            if (btn.isMouseInBounds) {
+                break;
+            }
+        }
     }
 
     public void renderAll() {
@@ -84,6 +145,7 @@ public class ButtonGroup {
 
         // render buffer!
         sh.bind();
+        ShaderHelper.uniform1f(sh, "time", (float) glfwGetTime());
         Renderer.draw(GL_TRIANGLE_STRIP, va, sb.getVertexCount());
     }
 }
