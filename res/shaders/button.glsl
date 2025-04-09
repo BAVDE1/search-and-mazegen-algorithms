@@ -16,8 +16,10 @@ out float v_isMouseHovering;
 
 void main() {
     // hovering wobble
-    float t = time * 5 + (wobbleIndex * .8);
-    vec2 wobble = vec2(sin(t), cos(t)) * 8 * isMouseHovering;
+    float t = time * 5 + (wobbleIndex);
+    vec2 wobble = vec2(sin(t)) * 6;
+    wobble.y += cos(t * 1.5) * 6;
+    wobble *= isMouseHovering;
 
     // regular
     gl_Position = vec4(pos.xy + wobble, 1, 1) * projectionMatrix;
@@ -40,11 +42,4 @@ out vec4 colour;
 void main() {
     float alpha = v_texturePos.x > -1 ? texture(fontTexture, v_texturePos.xy).a : 1;
     colour = (v_colour * alpha) / 255;
-//    if (v_isMouseHovering > .5) {
-//        colour.a = 0.;
-//    }
-//    colour -= vec4(1, 1, 1, 0) * v_isMouseHovering;
-//    if (v_isMouseHovering > .5) {
-//        colour -= vec4(1, 1, 1, 0);
-//    }
 }

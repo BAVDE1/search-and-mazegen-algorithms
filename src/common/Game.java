@@ -1,6 +1,8 @@
 package common;
 
 import Interactables.ButtonGroup;
+import Interactables.Button;
+import Interactables.ToggleButton;
 import boilerplate.common.GameBase;
 import boilerplate.common.TimeStepper;
 import boilerplate.common.Window;
@@ -99,9 +101,9 @@ public class Game extends GameBase {
 
         buttons.setupBufferObjects();
 
-        ButtonGroup.Button b1 = new ButtonGroup.Button(new Vec2(50), new Vec2(100, 50), "haha");
+        Button b1 = new ToggleButton(new Vec2(50), new Vec2(100, 50), "haha");
         b1.color = Color.CYAN;
-        ButtonGroup.Button b2 = new ButtonGroup.Button(new Vec2(120), new Vec2(80, 120), "uuhhhh");
+        Button b2 = new ToggleButton(new Vec2(120), new Vec2(80, 120), "uuhhhh");
         b2.color = Color.RED;
         buttons.addButton(b1, b2);
     }
