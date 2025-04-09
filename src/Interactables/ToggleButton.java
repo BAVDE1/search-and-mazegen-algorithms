@@ -21,6 +21,11 @@ public class ToggleButton extends Button {
     }
 
     @Override
+    public float getWobbleStrength() {
+        return isMouseHovering ? 1:.5f;
+    }
+
+    @Override
     public void setMouseHovering(boolean val) {
         isMouseHovering = val;
         if (val || !toggled) isWobbling = val;

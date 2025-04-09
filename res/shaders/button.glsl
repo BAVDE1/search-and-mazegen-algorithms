@@ -16,7 +16,7 @@ out float v_isMouseHovering;
 
 void main() {
     // hovering wobble
-    float t = time * 5 + (wobbleIndex);
+    float t = time * (5 * isWobbling) + wobbleIndex;
     vec2 wobble = vec2(sin(t)) * 6;
     wobble.y += cos(t * 1.5) * 6;
     wobble *= isWobbling;
