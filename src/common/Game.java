@@ -13,7 +13,6 @@ import boilerplate.utility.Vec2;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
-import java.util.Arrays;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -120,7 +119,7 @@ public class Game extends GameBase {
         algorithmButtons.addButton(df, bf, as, gbf);
 
         // separators
-        separatorSh.autoInitializeShadersMulti("shaders/simple_shape.glsl");
+        separatorSh.autoInitializeShadersMulti("shaders/simple_colour.glsl");
         ShaderHelper.uniformResolutionData(separatorSh, Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
 
         separatorVa.genId();
