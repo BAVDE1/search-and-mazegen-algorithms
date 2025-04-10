@@ -19,7 +19,7 @@ void main() {
     float t = time * (5 * isWobbling) + wobbleIndex;
     vec2 wobble = vec2(sin(t)) * 6;
     wobble.y += cos(t * 1.5) * 6;
-    wobble *= isWobbling;
+    wobble *= int(isWobbling > 0.001);  // yes or no
 
     // regular
     gl_Position = vec4(pos.xy + wobble, 1, 1) * projectionMatrix;

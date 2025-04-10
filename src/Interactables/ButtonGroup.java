@@ -18,6 +18,7 @@ public class ButtonGroup {
     private final VertexBuffer vb = new VertexBuffer();
     private final BufferBuilder2f sb = new BufferBuilder2f();
 
+    private boolean visible = true;
     public boolean hasChanged = false;
     public boolean radioToggles = false;
 
@@ -32,7 +33,7 @@ public class ButtonGroup {
         vaLayout.pushFloat(2);  // pos
         vaLayout.pushFloat(2);  // texture pos
         vaLayout.pushFloat(4);  // color
-        vaLayout.pushFloat(1);  // is wobbling
+        vaLayout.pushFloat(1);  // wobble strength
         vaLayout.pushFloat(1);  // wobble index
         va.pushBuffer(vb, vaLayout);
 
@@ -51,6 +52,7 @@ public class ButtonGroup {
     }
 
     public void updateMouse(Vec2 mousePos) {
+        if (!visible) return;
         for (Button btn : buttons) {
             boolean within = btn.isPointInBounds(mousePos);
             if (within == btn.isMouseHovering) continue;
@@ -60,6 +62,7 @@ public class ButtonGroup {
     }
 
     public void mouseClicked() {
+        if (!visible) return;
         for (Button btn : buttons) {
             if (btn instanceof ToggleButton toggleBtn) {
                 if (!btn.isMouseHovering || (radioToggles && toggleBtn.toggled)) continue;
@@ -87,7 +90,18 @@ public class ButtonGroup {
         }
     }
 
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean val) {
+        if (visible == val) return;;
+        visible = val;
+        hasChanged = true;
+    }
+
     public void renderAll() {
+        if (!visible) return;
         if (hasChanged) {
             hasChanged = false;
             sb.clear();

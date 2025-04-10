@@ -6,13 +6,14 @@ import Interactables.ToggleButton;
 import boilerplate.common.GameBase;
 import boilerplate.common.TimeStepper;
 import boilerplate.common.Window;
-import boilerplate.rendering.Renderer;
+import boilerplate.rendering.*;
 import boilerplate.rendering.text.FontManager;
 import boilerplate.rendering.text.TextRenderer;
 import boilerplate.utility.Vec2;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
+import java.util.Arrays;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -27,10 +28,13 @@ public class Game extends GameBase {
     int[] heldMouseKeys = new int[8];
     int[] heldKeys = new int[350];
 
-    TextRenderer.TextObject to1;
     TextRenderer textRenderer = new TextRenderer();
+    ButtonGroup algorithmButtons = new ButtonGroup();
 
-    ButtonGroup buttons = new ButtonGroup();
+    private final ShaderHelper separatorSh = new ShaderHelper();
+    private final VertexArray separatorVa = new VertexArray();
+    private final VertexBuffer separatorVb = new VertexBuffer();
+    private final BufferBuilder2f separatorSb = new BufferBuilder2f();
 
     @Override
     public void start() {
@@ -49,7 +53,9 @@ public class Game extends GameBase {
         window.show();
 
         FontManager.init();
+        FontManager.loadFont(Font.MONOSPACED, Font.PLAIN, 18, true);
         FontManager.loadFont(Font.MONOSPACED, Font.BOLD, 18, true);
+        FontManager.loadFont(FontManager.FONT_TINY, Font.PLAIN, 19, false);
         FontManager.generateAndBindAllFonts(Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
 
         bindEvents();
@@ -85,37 +91,68 @@ public class Game extends GameBase {
             if (action == 1) {
                 this.heldMouseKeys[button] = 1;
                 if (button == 0) this.mousePosOnClick.set(this.mousePos);
-                buttons.mouseClicked();
+                algorithmButtons.mouseClicked();
             }
         });
         glfwSetCursorPosCallback(window.handle, (window, xPos, yPos) -> {
             mousePos.set((float) xPos, (float) yPos);
-            buttons.updateMouse(mousePos);
+            algorithmButtons.updateMouse(mousePos);
         });
     }
 
     public void setupBuffers() {
+        // text
         textRenderer.setupBufferObjects();
-        to1 = new TextRenderer.TextObject(1, "some string", new Vec2(300), Color.CYAN, Color.DARK_GRAY);
-        textRenderer.pushTextObject(to1);
+        TextRenderer.TextObject title = new TextRenderer.TextObject(2, "...ssearchingg...", new Vec2(20, 40));
+        TextRenderer.TextObject searchTypeText = new TextRenderer.TextObject(1, "algorithm", new Vec2(25, 115));
+        title.setTextColour(Color.YELLOW);
+        searchTypeText.setTextColour(Color.YELLOW);
+        textRenderer.pushTextObject(title, searchTypeText);
 
-        buttons.setupBufferObjects();
+        // buttons
+        algorithmButtons.setupBufferObjects();
+        algorithmButtons.radioToggles = true;
+        ToggleButton df = new ToggleButton(new Vec2(25, 160), new Vec2(200, 40), "depth first", Color.YELLOW);
+        df.toggle(true);
+        Button bf = new ToggleButton(new Vec2(25, 220), new Vec2(200, 40), "breadth first", Color.YELLOW);
+        Button gbf = new ToggleButton(new Vec2(25, 280), new Vec2(200, 40), "greedy best first", Color.YELLOW);
+        Button as = new ToggleButton(new Vec2(25, 340), new Vec2(200, 40), "a star", Color.YELLOW);
+        algorithmButtons.addButton(df, bf, as, gbf);
 
-        Button b1 = new ToggleButton(new Vec2(50), new Vec2(100, 50), "haha");
-        b1.color = Color.CYAN;
-        Button b2 = new ToggleButton(new Vec2(120), new Vec2(80, 120), "uuhhhh");
-        b2.color = Color.RED;
-        buttons.addButton(b1, b2);
+        // separators
+        separatorSh.autoInitializeShadersMulti("shaders/simple_shape.glsl");
+        ShaderHelper.uniformResolutionData(separatorSh, Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
+
+        separatorVa.genId();
+        separatorVb.genId();
+        VertexArray.Layout vaLayout = new VertexArray.Layout();
+        vaLayout.pushFloat(2);  // pos
+        vaLayout.pushFloat(4);  // color
+        separatorVa.pushBuffer(separatorVb, vaLayout);
+
+        separatorSb.setAutoResize(true);
+        separatorSb.setAdditionalVertFloats(vaLayout.getTotalItems() - 2);  // minus pos
+
+        Color c = Color.YELLOW;
+        ShapeMode.Append mode = new ShapeMode.Append(new float[] {c.getRed(), c.getGreen(), c.getBlue(), .4f});
+        separatorSb.pushPolygon(Shape2d.createRectOutline(new Vec2(0), new Vec2(Constants.SCREEN_SIZE), 4, mode));
+        separatorSb.pushPolygon(Shape2d.createRectOutline(new Vec2(8), new Vec2(Constants.SCREEN_SIZE).sub(16), 2, mode));
+        separatorSb.pushSeparatedPolygon(Shape2d.createLine(new Vec2(16, 100), new Vec2(Constants.SCREEN_SIZE.width - 16, 100), 4, mode));
+        separatorSb.pushSeparatedPolygon(Shape2d.createLine(new Vec2(250, 110), new Vec2(250, Constants.SCREEN_SIZE.height - 16), 4, mode));
+        separatorVb.bufferSetData(separatorSb);
     }
 
     public void render() {
         Renderer.clearScreen();
 
         glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
-        buttons.renderAll();
+        algorithmButtons.renderAll();
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         textRenderer.draw();
+
+        separatorSh.bind();
+        Renderer.draw(GL_TRIANGLE_STRIP, separatorVa, separatorSb.getVertexCount());
         Renderer.finish(window);
     }
 }

@@ -19,7 +19,7 @@ public class Button {
     public Vec2 size;
     public String text;
     public Color color = Color.white;
-    public FontManager.LoadedFont font = FontManager.getLoadedFont(1);
+    public FontManager.LoadedFont font = FontManager.getLoadedFont(3);
 
     public boolean isMouseHovering = false;
     public boolean isWobbling = false;
@@ -30,6 +30,11 @@ public class Button {
         this.pos = pos;
         this.size = size;
         this.text = text;
+    }
+
+    public Button(Vec2 pos, Vec2 size, String text, Color color) {
+        this(pos, size, text);
+        this.color = color;
     }
 
     public void setMouseHovering(boolean val) {
@@ -58,7 +63,7 @@ public class Button {
                 pos.y < point.y && point.y < pos.y + size.y;
     }
 
-    public float getWobbleStrength() {
+    public float getWobbleSpeed() {
         return 1;
     }
 
@@ -97,7 +102,7 @@ public class Button {
 
         // hovering wobble
         if (isWobbling) {
-            float[] wobbleFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), getWobbleStrength()};
+            float[] wobbleFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), getWobbleSpeed()};
             java.util.List<float[]> wobbleIndexes = List.of(new float[]{0}, new float[]{1}, new float[]{2}, new float[]{3});
             Shape2d.Poly poly = Shape2d.createRect(pos, size, new ShapeMode.AppendUnpack(wobbleFloats, wobbleIndexes));
             sb.pushSeparatedPolygon(poly);
