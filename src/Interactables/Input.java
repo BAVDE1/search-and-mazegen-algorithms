@@ -30,7 +30,6 @@ public class Input {
     public float valueScale = 1;
     public int maxChars = 10;
 
-    public boolean intValuesOnly = true;
     public boolean mouseHovering = false;
     public boolean wobbling = false;
     public boolean selected = false;
@@ -41,6 +40,10 @@ public class Input {
 
     private InputGroup group;
     private final ArrayList<InputCallback> callbacks = new ArrayList<>();
+
+    public boolean intValuesOnly = true;
+    public Integer rangeMin;
+    public Integer rangeMax;
 
     public Input(Vec2 pos, String title, String defaultVal) {
         this.pos = pos;
@@ -78,6 +81,15 @@ public class Input {
     public void unselect() {
         if (!selected) return;
         selected = false;
+
+        // clamp
+        if (intValuesOnly && !value.isEmpty()) {
+            int intVal = Integer.parseInt(value);
+            if (rangeMin != null) intVal = Math.max(rangeMin, intVal);
+            if (rangeMax != null) intVal = Math.min(rangeMax, intVal);
+            value = String.valueOf(intVal);
+        }
+
         setMouseHovering(mouseHovering);  // update this!
         fireCallbacks();
     }
