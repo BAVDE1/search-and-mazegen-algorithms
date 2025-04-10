@@ -4,6 +4,7 @@ import boilerplate.rendering.BufferBuilder2f;
 import boilerplate.rendering.Shape2d;
 import boilerplate.rendering.ShapeMode;
 import boilerplate.rendering.text.FontManager;
+import boilerplate.rendering.text.TextRenderer;
 import boilerplate.utility.Vec2;
 
 import java.awt.*;
@@ -18,11 +19,12 @@ public class Button {
     public Vec2 pos;
     public Vec2 size;
     public String text;
+    public float textScale = 1;
     public Color color = Color.white;
     public FontManager.LoadedFont font = FontManager.getLoadedFont(3);
 
-    public boolean isMouseHovering = false;
-    public boolean isWobbling = false;
+    public boolean mouseHovering = false;
+    public boolean wobbling = false;
 
     private final ArrayList<ButtonCallback> callbacks = new ArrayList<>();
 
@@ -38,8 +40,8 @@ public class Button {
     }
 
     public void setMouseHovering(boolean val) {
-        isMouseHovering = val;
-        isWobbling = val;
+        mouseHovering = val;
+        wobbling = val;
     }
 
     public void addCallback(ButtonCallback callback) {
@@ -74,34 +76,17 @@ public class Button {
         sb.pushSeparatedPolygon(outlinePoly);
 
         // text
-        int textHeight = font.glyphMap.get(' ').height;
-        float textWidth = font.findLineWidth(text);
-
         if (text != null && !text.isEmpty()) {
+            int textHeight = (int) (font.glyphMap.get(' ').height * textScale);
+            float textWidth = font.findLineWidth(text) * textScale;
+
             float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0, 0};
-            float accumulatedX = size.x * .5f - textWidth * .5f;
-            float yPosMiddle = pos.y + (size.y * .5f - textHeight * .5f);
-            boolean initial = true;
-
-            for (char c : text.toCharArray()) {
-                FontManager.Glyph glyph = font.getGlyph(c);
-                Vec2 size = new Vec2(glyph.width, glyph.height);
-                Vec2 topLeft = new Vec2(pos.x + accumulatedX, yPosMiddle);
-
-                Shape2d.Poly texturePoints = Shape2d.createRect(glyph.texTopLeft, glyph.texSize);
-                ShapeMode.UnpackAppend mode = new ShapeMode.UnpackAppend(texturePoints.toArray(), textFloats);
-                Shape2d.Poly charPoly = Shape2d.createRect(topLeft, size, mode);
-
-                if (initial) {
-                    sb.pushSeparatedPolygon(charPoly);
-                    initial = false;
-                } else sb.pushPolygon(charPoly);
-                accumulatedX += (int) size.x;
-            }
+            Vec2 midOffset = size.mul(.5f).sub(new Vec2(textWidth, textHeight).mul(.5f));
+            TextRenderer.pushTextToBuilder(sb, text, font, pos.add(midOffset), textFloats, textScale);
         }
 
         // hovering wobble
-        if (isWobbling) {
+        if (wobbling) {
             float[] wobbleFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), getWobbleSpeed()};
             java.util.List<float[]> wobbleIndexes = List.of(new float[]{0}, new float[]{1}, new float[]{2}, new float[]{3});
             Shape2d.Poly poly = Shape2d.createRect(pos, size, new ShapeMode.AppendUnpack(wobbleFloats, wobbleIndexes));

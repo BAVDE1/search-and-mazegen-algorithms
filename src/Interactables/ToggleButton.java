@@ -22,19 +22,19 @@ public class ToggleButton extends Button {
     public void toggle(boolean val) {
         if (val == toggled) return;
         toggled = val;
-        if (!isMouseHovering) isWobbling = val;
+        if (!mouseHovering) wobbling = val;
         fireCallbacks();
     }
 
     @Override
     public float getWobbleSpeed() {
-        return isMouseHovering ? 1:.4f;
+        return mouseHovering ? 1:.4f;
     }
 
     @Override
     public void setMouseHovering(boolean val) {
-        isMouseHovering = val;
-        if (val || !toggled) isWobbling = val;
+        mouseHovering = val;
+        if (val || !toggled) wobbling = val;
     }
 
     @Override

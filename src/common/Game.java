@@ -1,8 +1,7 @@
 package common;
 
-import Interactables.ButtonGroup;
+import Interactables.*;
 import Interactables.Button;
-import Interactables.ToggleButton;
 import boilerplate.common.GameBase;
 import boilerplate.common.TimeStepper;
 import boilerplate.common.Window;
@@ -29,6 +28,7 @@ public class Game extends GameBase {
 
     TextRenderer textRenderer = new TextRenderer();
     ButtonGroup algorithmButtons = new ButtonGroup();
+    InputGroup inputGroup = new InputGroup();
 
     private final ShaderHelper separatorSh = new ShaderHelper();
     private final VertexArray separatorVa = new VertexArray();
@@ -79,10 +79,15 @@ public class Game extends GameBase {
 
     public void bindEvents() {
         GLFW.glfwSetKeyCallback(this.window.handle, (window, key, scancode, action, mods) -> {
-            if (action == 0) this.heldKeys[key] = 0;
-            if (action == 1) this.heldKeys[key] = 1;
-            if (key == GLFW_KEY_ESCAPE && action == 0) {
-                GLFW.glfwSetWindowShouldClose(window, true);
+            if (action == 0) {
+                this.heldKeys[key] = 0;
+                if (key == GLFW_KEY_ESCAPE) {
+                    glfwSetWindowShouldClose(window, true);
+                }
+            }
+            if (action == 1) {
+                this.heldKeys[key] = 1;
+                inputGroup.keyPressed(key, scancode);
             }
         });
         GLFW.glfwSetMouseButtonCallback(this.window.handle, (window, button, action, mode) -> {
@@ -91,11 +96,13 @@ public class Game extends GameBase {
                 this.heldMouseKeys[button] = 1;
                 if (button == 0) this.mousePosOnClick.set(this.mousePos);
                 algorithmButtons.mouseClicked();
+                inputGroup.mouseClicked();
             }
         });
         glfwSetCursorPosCallback(window.handle, (window, xPos, yPos) -> {
             mousePos.set((float) xPos, (float) yPos);
             algorithmButtons.updateMouse(mousePos);
+            inputGroup.updateMouse(mousePos);
         });
     }
 
@@ -112,11 +119,17 @@ public class Game extends GameBase {
         algorithmButtons.setupBufferObjects();
         algorithmButtons.radioToggles = true;
         ToggleButton df = new ToggleButton(new Vec2(25, 160), new Vec2(200, 40), "depth first", Color.YELLOW);
-        df.toggle(true);
         Button bf = new ToggleButton(new Vec2(25, 220), new Vec2(200, 40), "breadth first", Color.YELLOW);
         Button gbf = new ToggleButton(new Vec2(25, 280), new Vec2(200, 40), "greedy best first", Color.YELLOW);
         Button as = new ToggleButton(new Vec2(25, 340), new Vec2(200, 40), "a star", Color.YELLOW);
         algorithmButtons.addButton(df, bf, as, gbf);
+        algorithmButtons.toggleBtn(df, true);
+
+        // inputs
+        inputGroup.setupBufferObjects();
+        Input i = new Input(new Vec2(400), "hahaha", "0");
+        Input i2 = new Input(new Vec2(500), "other", "4", Color.CYAN);
+        inputGroup.addInput(i, i2);
 
         // separators
         separatorSh.autoInitializeShadersMulti("shaders/simple_colour.glsl");
@@ -146,6 +159,7 @@ public class Game extends GameBase {
 
         glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
         algorithmButtons.renderAll();
+        inputGroup.renderAll();
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         textRenderer.draw();
