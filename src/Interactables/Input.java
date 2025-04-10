@@ -20,7 +20,7 @@ public class Input {
 
     public Vec2 pos;
     public Color color = Color.white;
-    public FontManager.LoadedFont font = FontManager.getLoadedFont(3);
+    public FontManager.LoadedFont font = FontManager.getLoadedFont(2);
 
     public String title;
     public float titleScale = 1;
@@ -34,8 +34,8 @@ public class Input {
     public boolean wobbling = false;
     public boolean selected = false;
 
-    private Vec2 areaPos;
-    private Vec2 areaSize;
+    private Vec2 areaPos = new Vec2();
+    private Vec2 areaSize = new Vec2();
     private final Vec2 areaMargin = new Vec2(20, 10);
 
     private InputGroup group;

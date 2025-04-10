@@ -52,7 +52,6 @@ public class Game extends GameBase {
         window.show();
 
         FontManager.init();
-        FontManager.loadFont(Font.MONOSPACED, Font.PLAIN, 18, true);
         FontManager.loadFont(Font.MONOSPACED, Font.BOLD, 18, true);
         FontManager.loadFont(FontManager.FONT_TINY, Font.PLAIN, 19, false);
         FontManager.generateAndBindAllFonts(Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
@@ -109,7 +108,7 @@ public class Game extends GameBase {
     public void setupBuffers() {
         // text
         textRenderer.setupBufferObjects();
-        TextRenderer.TextObject title = new TextRenderer.TextObject(2, "...ssearchingg...", new Vec2(20, 40));
+        TextRenderer.TextObject title = new TextRenderer.TextObject(1, "...ssearchingg...", new Vec2(20, 40));
         TextRenderer.TextObject searchTypeText = new TextRenderer.TextObject(1, "algorithm", new Vec2(25, 115));
         title.setTextColour(Color.YELLOW);
         searchTypeText.setTextColour(Color.YELLOW);
