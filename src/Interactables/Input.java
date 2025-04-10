@@ -139,7 +139,7 @@ public class Input {
         // title
         int titleHeight = 0;
         if (!title.isEmpty()) {
-            titleHeight = (int) (font.glyphMap.get(' ').height * titleScale);
+            titleHeight = (int) (font.getLineHeight() * titleScale);
             float titleWidth = font.findLineWidth(title) * titleScale;
 
             float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0, 0};
@@ -147,8 +147,8 @@ public class Input {
             TextRenderer.pushTextToBuilder(sb, title, font, linePos, textFloats, titleScale);
         }
 
-        // find area pos & size
-        float valueHeight = (int) (font.glyphMap.get(' ').height * valueScale);
+        // find new area pos & size
+        float valueHeight = (int) (font.getLineHeight() * valueScale);
         float valueWidth = font.findLineWidth(value) * valueScale;
         areaPos = pos.add(-(valueWidth * .5f) - areaMargin.x * .5f, titleHeight + areaMargin.y);
         areaSize = new Vec2(valueWidth, valueHeight).add(areaMargin);

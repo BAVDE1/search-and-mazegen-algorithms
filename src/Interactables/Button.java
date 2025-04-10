@@ -77,7 +77,7 @@ public class Button {
 
         // text
         if (text != null && !text.isEmpty()) {
-            int textHeight = (int) (font.glyphMap.get(' ').height * textScale);
+            int textHeight = (int) (font.getLineHeight() * textScale);
             float textWidth = font.findLineWidth(text) * textScale;
 
             float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0, 0};
