@@ -52,14 +52,13 @@ public class InputRange extends Input {
         try {
             int val = clampValue(Integer.parseInt(value));
             float thumbX = pos.x + (((val - (rangeMax + rangeMin) / 2f) / (rangeMax - rangeMin)) * barRangeWidth);
-            thumbX -= thumbSize.x * .5f;
             float thumbY = barPos.y + barMargin.y - (thumbSize.y * .5f);
-            thumbPos = new Vec2(thumbX, thumbY);
-        } catch (NumberFormatException _) {}
+            thumbPos = new Vec2(thumbX - thumbSize.x * .5f, thumbY);
+        } catch (NumberFormatException _) {}  // not a valid number, just ignore it
     }
 
     public void updateValueFromMousePos(Vec2 mousePos) {
-        float percent = (mousePos.x - barPos.x + barMargin.x) / (barSize.x - barMargin.x);
+        float percent = (mousePos.x - barPos.x - barMargin.x) / barRangeWidth;
         int newValInt = clampValue((int) (rangeMin + ((rangeMax - rangeMin) * percent)));
         String newVal = String.valueOf(newValInt);
         if (!newVal.equals(value)) {
