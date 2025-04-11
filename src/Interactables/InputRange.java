@@ -51,7 +51,7 @@ public class InputRange extends Input {
     private void updateThumbPos() {
         try {
             int val = clampValue(Integer.parseInt(value));
-            float thumbX = pos.x + (((val - (rangeMax + rangeMin) / 2f) / (rangeMax - rangeMin)) * barRangeWidth);
+            float thumbX = pos.x + (((val - (rangeMax + rangeMin) * .5f) / (rangeMax - rangeMin)) * barRangeWidth);
             float thumbY = barPos.y + barMargin.y - (thumbSize.y * .5f);
             thumbPos = new Vec2(thumbX - thumbSize.x * .5f, thumbY);
         } catch (NumberFormatException _) {}  // not a valid number, just ignore it
