@@ -36,6 +36,8 @@ public class Game extends GameBase {
     private final VertexBuffer separatorVb = new VertexBuffer();
     private final BufferBuilder2f separatorSb = new BufferBuilder2f();
 
+    Button startBtn;
+
     @Override
     public void start() {
         this.timeStarted = (double)System.currentTimeMillis();
@@ -122,9 +124,9 @@ public class Game extends GameBase {
 
         // buttons
         actionButtons.setupBufferObjects();
-        Button s = new Button(new Vec2(300, 55), new Vec2(100, 50), "start", Color.GREEN);
-        Button g = new Button(new Vec2(450, 55), new Vec2(150, 50), "re-generate", Color.GRAY);
-        actionButtons.addButton(s, g);
+        startBtn = new Button(new Vec2(300, 55), new Vec2(100, 50), "start", Color.GREEN);
+        Button g = new Button(new Vec2(450, 55), new Vec2(150, 50), "re-generate", Color.LIGHT_GRAY);
+        actionButtons.addButton(startBtn, g);
 
         algorithmButtons.setupBufferObjects();
         algorithmButtons.radioToggles = true;
