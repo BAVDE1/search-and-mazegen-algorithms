@@ -34,19 +34,51 @@ public class InputGroup extends InteractableGroup {
 
     public void updateMouse(Vec2 mousePos) {
         if (!visible) return;
+
+        if (selectedInput != null && selectedInput instanceof InputRange inputRange) {
+            if (inputRange.thumbHeld) {
+                inputRange.updateValueFromMousePos(mousePos);
+                return;
+            }
+        }
+
         for (Input input : inputs) {
-            boolean within = input.isPointInBounds(mousePos);
+            if (input instanceof InputRange inputRange) {
+                boolean withinBar = inputRange.isPointInBarArea(mousePos);
+                if (withinBar != inputRange.mouseHoveringBar) {
+                    inputRange.mouseHoveringBar = withinBar;
+                    hasChanged = true;
+                }
+            }
+
+            boolean within = input.isPointInInputArea(mousePos);
             if (within == input.mouseHovering) continue;
             input.setMouseHovering(within);
             if (!input.selected) hasChanged = true;
         }
     }
 
-    public void mouseClicked() {
+    public void mouseUp() {
+        if (selectedInput != null && selectedInput instanceof InputRange inputRange) {
+            if (inputRange.thumbHeld) unselectCurrentInput();
+        }
+    }
+
+    public void mouseDown(Vec2 mousePos) {
         if (!visible) return;
 
         unselectCurrentInput();
         for (Input input : inputs) {
+            if (input instanceof InputRange inputRange) {
+                // bar
+                if (inputRange.mouseHoveringBar) {
+                    inputRange.thumbHeld = true;
+                    inputRange.updateValueFromMousePos(mousePos);
+                    selectedInput = inputRange;
+                    break;
+                }
+            }
+            // input
             if (!input.mouseHovering) continue;
             input.select();
             selectedInput = input;

@@ -34,11 +34,11 @@ public class Input {
     public boolean wobbling = false;
     public boolean selected = false;
 
-    private Vec2 areaPos = new Vec2();
-    private Vec2 areaSize = new Vec2();
-    private final Vec2 areaMargin = new Vec2(20, 10);
+    Vec2 areaPos = new Vec2();
+    Vec2 areaSize = new Vec2();
+    final Vec2 areaMargin = new Vec2(20, 10);
 
-    private InputGroup group;
+    InputGroup group;
     private final ArrayList<InputCallback> callbacks = new ArrayList<>();
 
     public boolean intValuesOnly = true;
@@ -130,7 +130,7 @@ public class Input {
         for (InputCallback callback : callbacks) callback.call(this, value);
     }
 
-    public boolean isPointInBounds(Vec2 point) {
+    public boolean isPointInInputArea(Vec2 point) {
         return areaPos.x - areaMargin.x < point.x && point.x < areaPos.x + areaSize.x + areaMargin.x &&
                 areaPos.y < point.y && point.y < areaPos.y + areaSize.y;
     }

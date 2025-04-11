@@ -79,23 +79,26 @@ public class Game extends GameBase {
     public void bindEvents() {
         GLFW.glfwSetKeyCallback(this.window.handle, (window, key, scancode, action, mods) -> {
             if (action == 0) {
-                this.heldKeys[key] = 0;
+                if (key >= 0 && key < heldKeys.length) heldKeys[key] = 0;
                 if (key == GLFW_KEY_ESCAPE) {
                     glfwSetWindowShouldClose(window, true);
                 }
             }
             if (action == 1) {
-                this.heldKeys[key] = 1;
+                if (key >= 0 && key < heldKeys.length) heldKeys[key] = 1;
                 inputGroup.keyPressed(key, scancode);
             }
         });
         GLFW.glfwSetMouseButtonCallback(this.window.handle, (window, button, action, mode) -> {
-            if (action == 0) this.heldMouseKeys[button] = 0;
+            if (action == 0) {
+                this.heldMouseKeys[button] = 0;
+                inputGroup.mouseUp();
+            }
             if (action == 1) {
                 this.heldMouseKeys[button] = 1;
                 if (button == 0) this.mousePosOnClick.set(this.mousePos);
                 algorithmButtons.mouseClicked();
-                inputGroup.mouseClicked();
+                inputGroup.mouseDown(mousePos);
             }
         });
         glfwSetCursorPosCallback(window.handle, (window, xPos, yPos) -> {
@@ -128,7 +131,8 @@ public class Game extends GameBase {
         inputGroup.setupBufferObjects();
         Input i = new Input(new Vec2(400), "hahaha", "0");
         Input i2 = new Input(new Vec2(500), "other", "4", Color.CYAN);
-        inputGroup.addInput(i, i2);
+        InputRange ir = new InputRange(new Vec2(400, 200), "rangeee", 5, 0, 10, Color.RED);
+        inputGroup.addInput(i, i2, ir);
 
         // separators
         separatorSh.autoInitializeShadersMulti("shaders/simple_colour.glsl");
