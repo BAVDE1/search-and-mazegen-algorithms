@@ -40,6 +40,7 @@ public class Game extends GameBase {
 
     boolean searchesListed = true;
     Button startBtn;
+    TextRenderer.TextObject selectedAlgorithms;
 
     @Override
     public void start() {
@@ -59,6 +60,7 @@ public class Game extends GameBase {
 
         FontManager.init();
         FontManager.loadFont(Font.MONOSPACED, Font.BOLD, 18, true);
+        FontManager.loadFont(Font.MONOSPACED, Font.BOLD, 14, true);
         FontManager.loadFont(FontManager.FONT_TINY, Font.PLAIN, 19, false);
         FontManager.generateAndBindAllFonts(Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
 
@@ -125,7 +127,9 @@ public class Game extends GameBase {
         textRenderer.setupBufferObjects();
         TextRenderer.TextObject at = new TextRenderer.TextObject(1, "algorithm", new Vec2(75, 185));
         at.setTextColour(Color.YELLOW);
-        textRenderer.pushTextObject(at);
+        selectedAlgorithms = new TextRenderer.TextObject(2, "", new Vec2(20, Constants.SCREEN_SIZE.height - 60));
+        selectedAlgorithms.setTextColour(Color.YELLOW);
+        textRenderer.pushTextObject(at, selectedAlgorithms);
 
         // buttons
         actionButtons.setupBufferObjects();
@@ -135,10 +139,8 @@ public class Game extends GameBase {
 
         modeButtons.setupBufferObjects();
         modeButtons.radioToggles = true;
-        ToggleButton search = new ToggleButton(new Vec2(25, 25), new Vec2(200, 40), "search maze");
+        ToggleButton search = new ToggleButton(new Vec2(25, 30), new Vec2(200, 40), "search maze");
         ToggleButton gen = new ToggleButton(new Vec2(25, 90), new Vec2(200, 40), "maze generation");
-        search.textScale = 1.2f;
-        gen.textScale = 1.2f;
         search.addCallback((Button btn) -> {
             ToggleButton toggleButton = (ToggleButton) btn;
             mazeGenerationButtons.setVisible(!toggleButton.toggled);
@@ -196,6 +198,12 @@ public class Game extends GameBase {
 
     public void render() {
         Renderer.clearScreen();
+
+        selectedAlgorithms.setString(String.format(
+                "search: %s\nmaze: %s",
+                searchAlgorithmButtons.radioBtnSelected.text,
+                mazeGenerationButtons.radioBtnSelected.text
+        ));
 
         glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
         actionButtons.renderAll();

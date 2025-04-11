@@ -20,7 +20,7 @@ public class Input {
 
     public Vec2 pos;
     public Color color = Color.white;
-    public FontManager.LoadedFont font = FontManager.getLoadedFont(2);
+    public FontManager.LoadedFont font = FontManager.getLoadedFont(3);
 
     public String title;
     public float titleScale = 1;

@@ -8,7 +8,7 @@ import java.util.Arrays;
 public class ButtonGroup extends InteractableGroup {
     private final ArrayList<Button> buttons = new ArrayList<>();
     public boolean radioToggles = false;
-    private ToggleButton radioBtnSelected;
+    public ToggleButton radioBtnSelected;
 
     public void addButton(Button ...btns) {
         buttons.addAll(Arrays.asList(btns));

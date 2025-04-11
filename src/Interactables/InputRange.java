@@ -39,6 +39,7 @@ public class InputRange extends Input {
     }
 
     public boolean isPointInBarArea(Vec2 point) {
+        if (barPos == null) return false;
         return barPos.x < point.x && point.x < barPos.x + barSize.x &&
                 barPos.y < point.y && point.y < barPos.y + barSize.y;
     }

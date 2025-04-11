@@ -21,7 +21,7 @@ public class Button {
     public String text;
     public float textScale = 1;
     public Color color = Color.white;
-    public FontManager.LoadedFont font = FontManager.getLoadedFont(2);
+    public FontManager.LoadedFont font = FontManager.getLoadedFont(3);
 
     public boolean mouseHovering = false;
     public boolean wobbling = false;
