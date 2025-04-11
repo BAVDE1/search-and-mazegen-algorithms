@@ -27,6 +27,7 @@ public class Game extends GameBase {
     int[] heldKeys = new int[350];
 
     TextRenderer textRenderer = new TextRenderer();
+    ButtonGroup actionButtons = new ButtonGroup();
     ButtonGroup algorithmButtons = new ButtonGroup();
     InputGroup inputGroup = new InputGroup();
 
@@ -97,12 +98,14 @@ public class Game extends GameBase {
             if (action == 1) {
                 this.heldMouseKeys[button] = 1;
                 if (button == 0) this.mousePosOnClick.set(this.mousePos);
+                actionButtons.mouseClicked();
                 algorithmButtons.mouseClicked();
                 inputGroup.mouseDown(mousePos);
             }
         });
         glfwSetCursorPosCallback(window.handle, (window, xPos, yPos) -> {
             mousePos.set((float) xPos, (float) yPos);
+            actionButtons.updateMouse(mousePos);
             algorithmButtons.updateMouse(mousePos);
             inputGroup.updateMouse(mousePos);
         });
@@ -111,28 +114,32 @@ public class Game extends GameBase {
     public void setupBuffers() {
         // text
         textRenderer.setupBufferObjects();
-        TextRenderer.TextObject title = new TextRenderer.TextObject(1, "...ssearchingg...", new Vec2(20, 40));
-        TextRenderer.TextObject searchTypeText = new TextRenderer.TextObject(1, "algorithm", new Vec2(25, 115));
+        TextRenderer.TextObject title = new TextRenderer.TextObject(1, "...ssearchingg...", new Vec2(20, 70));
+        TextRenderer.TextObject searchTypeText = new TextRenderer.TextObject(1, "algorithm", new Vec2(25, 165));
         title.setTextColour(Color.YELLOW);
         searchTypeText.setTextColour(Color.YELLOW);
         textRenderer.pushTextObject(title, searchTypeText);
 
         // buttons
+        actionButtons.setupBufferObjects();
+        Button s = new Button(new Vec2(300, 55), new Vec2(100, 50), "start", Color.GREEN);
+        Button g = new Button(new Vec2(450, 55), new Vec2(150, 50), "re-generate", Color.GRAY);
+        actionButtons.addButton(s, g);
+
         algorithmButtons.setupBufferObjects();
         algorithmButtons.radioToggles = true;
-        ToggleButton df = new ToggleButton(new Vec2(25, 160), new Vec2(200, 40), "depth first", Color.YELLOW);
-        Button bf = new ToggleButton(new Vec2(25, 220), new Vec2(200, 40), "breadth first", Color.YELLOW);
-        Button gbf = new ToggleButton(new Vec2(25, 280), new Vec2(200, 40), "greedy best first", Color.YELLOW);
-        Button as = new ToggleButton(new Vec2(25, 340), new Vec2(200, 40), "a star", Color.YELLOW);
+        ToggleButton df = new ToggleButton(new Vec2(25, 210), new Vec2(200, 40), "depth first", Color.YELLOW);
+        ToggleButton bf = new ToggleButton(new Vec2(25, 270), new Vec2(200, 40), "breadth first", Color.YELLOW);
+        ToggleButton gbf = new ToggleButton(new Vec2(25, 330), new Vec2(200, 40), "greedy best first", Color.YELLOW);
+        ToggleButton as = new ToggleButton(new Vec2(25, 390), new Vec2(200, 40), "a star", Color.YELLOW);
         algorithmButtons.addButton(df, bf, as, gbf);
         algorithmButtons.toggleBtn(df, true);
 
         // inputs
         inputGroup.setupBufferObjects();
-        Input i = new Input(new Vec2(400), "hahaha", "0");
-        Input i2 = new Input(new Vec2(500), "other", "4", Color.CYAN);
-        InputRange ir = new InputRange(new Vec2(400, 200), "rangeee", 5, 0, 10, Color.RED);
-        inputGroup.addInput(i, i2, ir);
+        InputRange fpo = new InputRange(new Vec2(900, 20), "frames / op", 1, 0, 50, Color.YELLOW);
+        InputRange ms = new InputRange(new Vec2(750, 20), "maze size", 20, 5, 50, Color.YELLOW);
+        inputGroup.addInput(fpo, ms);
 
         // separators
         separatorSh.autoInitializeShadersMulti("shaders/simple_colour.glsl");
@@ -152,8 +159,8 @@ public class Game extends GameBase {
         ShapeMode.Append mode = new ShapeMode.Append(new float[] {c.getRed(), c.getGreen(), c.getBlue(), .4f});
         separatorSb.pushPolygon(Shape2d.createRectOutline(new Vec2(0), new Vec2(Constants.SCREEN_SIZE), 4, mode));
         separatorSb.pushPolygon(Shape2d.createRectOutline(new Vec2(8), new Vec2(Constants.SCREEN_SIZE).sub(16), 2, mode));
-        separatorSb.pushSeparatedPolygon(Shape2d.createLine(new Vec2(16, 100), new Vec2(Constants.SCREEN_SIZE.width - 16, 100), 4, mode));
-        separatorSb.pushSeparatedPolygon(Shape2d.createLine(new Vec2(250, 110), new Vec2(250, Constants.SCREEN_SIZE.height - 16), 4, mode));
+        separatorSb.pushSeparatedPolygon(Shape2d.createLine(new Vec2(16, 150), new Vec2(Constants.SCREEN_SIZE.width - 16, 150), 4, mode));
+        separatorSb.pushSeparatedPolygon(Shape2d.createLine(new Vec2(250, 160), new Vec2(250, Constants.SCREEN_SIZE.height - 16), 4, mode));
         separatorVb.bufferSetData(separatorSb);
     }
 
@@ -161,6 +168,7 @@ public class Game extends GameBase {
         Renderer.clearScreen();
 
         glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+        actionButtons.renderAll();
         algorithmButtons.renderAll();
         inputGroup.renderAll();
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

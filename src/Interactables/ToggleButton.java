@@ -28,7 +28,7 @@ public class ToggleButton extends Button {
 
     @Override
     public float getWobbleSpeed() {
-        return mouseHovering ? 1:.4f;
+        return mouseHovering ? 1:.2f;
     }
 
     @Override
