@@ -125,6 +125,9 @@ public class Game extends GameBase {
     }
 
     public void setupBuffers() {
+        // maze
+        maze.setupBufferObjects();
+
         // text
         textRenderer.setupBufferObjects();
         TextRenderer.TextObject at = new TextRenderer.TextObject(1, "algorithm", new Vec2(75, 185));
@@ -208,15 +211,16 @@ public class Game extends GameBase {
                 mazeGenerationButtons.radioBtnSelected.text
         ));
 
-        glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+        maze.render();
+        textRenderer.draw();
+
+        glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);  // special render mode for buttons
         actionButtons.renderAll();
         modeButtons.renderAll();
         mazeGenerationButtons.renderAll();
         searchAlgorithmButtons.renderAll();
         inputGroup.renderAll();
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        textRenderer.draw();
 
         separatorSh.bind();
         Renderer.draw(GL_TRIANGLE_STRIP, separatorVa, separatorSb.getVertexCount());

@@ -3,12 +3,14 @@ package Interactables;
 import boilerplate.rendering.*;
 import boilerplate.rendering.text.FontManager;
 import common.Constants;
+import org.lwjgl.opengl.ARBShaderStorageBufferObject;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.opengl.GL11.GL_TRIANGLE_STRIP;
 
 public abstract class InteractableGroup {
-    final ShaderHelper sh = new ShaderHelper();
+    static final ShaderHelper sh = new ShaderHelper();
+    static private boolean shInitialized = false;
     final VertexArray va = new VertexArray();
     final VertexBuffer vb = new VertexBuffer();
     final BufferBuilder2f sb = new BufferBuilder2f(true);
@@ -17,7 +19,8 @@ public abstract class InteractableGroup {
     public boolean hasChanged = false;
 
     public void setupBufferObjects() {
-        sh.autoInitializeShadersMulti("shaders/interactable.glsl");
+        if (!shInitialized) sh.autoInitializeShadersMulti("shaders/interactable.glsl");
+        shInitialized = true;
         ShaderHelper.uniformResolutionData(sh, Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
         ShaderHelper.uniform1i(sh, "fontTexture", FontManager.FONT_TEXTURE_SLOT);
 
@@ -31,7 +34,6 @@ public abstract class InteractableGroup {
         vaLayout.pushFloat(1);  // wobble index
         va.pushBuffer(vb, vaLayout);
 
-        sb.setAutoResize(true);
         sb.setAdditionalVertFloats(vaLayout.getTotalItems() - 2);  // minus pos
     }
 
