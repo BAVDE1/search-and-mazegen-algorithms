@@ -26,6 +26,8 @@ public class Game extends GameBase {
     int[] heldMouseKeys = new int[8];
     int[] heldKeys = new int[350];
 
+    Maze maze = new Maze();
+
     TextRenderer textRenderer = new TextRenderer();
     ButtonGroup actionButtons = new ButtonGroup();
     ButtonGroup modeButtons = new ButtonGroup();
@@ -153,9 +155,10 @@ public class Game extends GameBase {
         mazeGenerationButtons.radioToggles = true;
         ToggleButton rdf = new ToggleButton(new Vec2(25, 230), new Vec2(200, 40), "rand depth first", Color.YELLOW);
         ToggleButton rk = new ToggleButton(new Vec2(25, 290), new Vec2(200, 40), "rand kruskal", Color.YELLOW);
-        ToggleButton rp = new ToggleButton(new Vec2(25, 350), new Vec2(200, 40), "rand Prim", Color.YELLOW);
-        ToggleButton w = new ToggleButton(new Vec2(25, 410), new Vec2(200, 40), "Wilson", Color.YELLOW);
-        mazeGenerationButtons.addButton(rdf, rk, rp, w);
+        ToggleButton rp = new ToggleButton(new Vec2(25, 350), new Vec2(200, 40), "rand prim", Color.YELLOW);
+        ToggleButton w = new ToggleButton(new Vec2(25, 410), new Vec2(200, 40), "wilson", Color.YELLOW);
+        ToggleButton ft = new ToggleButton(new Vec2(25, 470), new Vec2(200, 40), "fractal tesselation", Color.YELLOW);
+        mazeGenerationButtons.addButton(rdf, rk, rp, w, ft);
         mazeGenerationButtons.toggleBtn(rdf, true);
 
         searchAlgorithmButtons.setupBufferObjects();
