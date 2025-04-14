@@ -26,7 +26,7 @@ public class InputGroup extends InteractableGroup {
     public void keyPressed(int key, int scancode) {
         if (!visible || selectedInput == null) return;
         if (key == GLFW_KEY_ENTER || key == GLFW_KEY_TAB) {
-            unselectCurrentInput();
+            deselectCurrentInput();
             return;
         }
         selectedInput.keyPressed(key, scancode);
@@ -36,7 +36,7 @@ public class InputGroup extends InteractableGroup {
         if (!visible) return;
 
         if (selectedInput != null && selectedInput instanceof InputRange inputRange) {
-            if (inputRange.thumbHeld) {
+            if (inputRange.thumbHeld && !inputRange.disabled) {
                 inputRange.updateValueFromMousePos(mousePos);
                 return;
             }
@@ -45,7 +45,7 @@ public class InputGroup extends InteractableGroup {
         for (Input input : inputs) {
             if (input instanceof InputRange inputRange) {
                 boolean withinBar = inputRange.isPointInBarArea(mousePos);
-                if (withinBar != inputRange.mouseHoveringBar) {
+                if (withinBar != inputRange.mouseHoveringBar && !inputRange.disabled) {
                     inputRange.mouseHoveringBar = withinBar;
                     hasChanged = true;
                 }
@@ -60,14 +60,14 @@ public class InputGroup extends InteractableGroup {
 
     public void mouseUp() {
         if (selectedInput != null && selectedInput instanceof InputRange inputRange) {
-            if (inputRange.thumbHeld) unselectCurrentInput();
+            if (inputRange.thumbHeld) deselectCurrentInput();
         }
     }
 
     public void mouseDown(Vec2 mousePos) {
         if (!visible) return;
 
-        unselectCurrentInput();
+        deselectCurrentInput();
         for (Input input : inputs) {
             if (input instanceof InputRange inputRange) {
                 // bar
@@ -87,9 +87,9 @@ public class InputGroup extends InteractableGroup {
         }
     }
 
-    public void unselectCurrentInput() {
+    public void deselectCurrentInput() {
         if (selectedInput == null) return;
-        selectedInput.unselect();
+        selectedInput.deselect();
         selectedInput = null;
         hasChanged = true;
     }

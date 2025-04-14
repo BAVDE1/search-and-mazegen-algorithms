@@ -21,6 +21,7 @@ public class Input {
     public Vec2 pos;
     public Color color = Color.white;
     public FontManager.LoadedFont font = FontManager.getLoadedFont(3);
+    public boolean disabled = false;
 
     public String title;
     public float titleScale = 1;
@@ -58,6 +59,7 @@ public class Input {
     }
 
     public void setMouseHovering(boolean val) {
+        if (disabled) return;
         mouseHovering = val;
         if (!selected) wobbling = val;
     }
@@ -78,8 +80,8 @@ public class Input {
         callbacks.clear();
     }
 
-    public void unselect() {
-        if (!selected) return;
+    public void deselect() {
+        if (!selected || disabled) return;
         selected = false;
 
         // clamp
@@ -95,10 +97,12 @@ public class Input {
     }
 
     public void select() {
+        if (disabled) return;
         selected = true;
     }
 
     public void keyPressed(int key, int scancode) {
+        if (disabled) return;
         if (key == GLFW.GLFW_KEY_BACKSPACE && !value.isEmpty()) {
             value = value.substring(0, value.length() - 1);
             group.hasChanged = true;
@@ -127,6 +131,7 @@ public class Input {
     }
 
     public void fireCallbacks() {
+        if (disabled) return;
         for (InputCallback callback : callbacks) callback.call(this, value);
     }
 
@@ -135,14 +140,19 @@ public class Input {
                 areaPos.y < point.y && point.y < areaPos.y + areaSize.y;
     }
 
+    float getAlpha() {
+        return disabled ? 255 * .5f : color.getAlpha();
+    }
+
     public void appendToBufferBuilder(BufferBuilder2f sb) {
+
         // title
         int titleHeight = 0;
         if (!title.isEmpty()) {
             titleHeight = (int) (font.getLineHeight() * titleScale);
             float titleWidth = font.findLineWidth(title) * titleScale;
 
-            float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0, 0};
+            float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), getAlpha(), 0, 0};
             Vec2 linePos = pos.sub(titleWidth * .5f, 0);
             TextRenderer.pushTextToBuilder(sb, title, font, linePos, textFloats, titleScale);
         }
@@ -155,19 +165,19 @@ public class Input {
 
         // value
         if (!value.isEmpty()) {
-            float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0, 0};
+            float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), getAlpha(), 0, 0};
             Vec2 midOffset = areaSize.mul(.5f).sub(new Vec2(valueWidth, valueHeight).mul(.5f));
             TextRenderer.pushTextToBuilder(sb, value, font, areaPos.add(midOffset), textFloats, valueScale);
         }
 
         // value outline
-        float[] outlineFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0, 0};
+        float[] outlineFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), getAlpha(), 0, 0};
         Shape2d.Poly outlinePoly = Shape2d.createRectOutline(areaPos, areaSize, 3, new ShapeMode.Append(outlineFloats));
         sb.pushSeparatedPolygon(outlinePoly);
 
         // hovering wobble
         if (wobbling) {
-            float[] wobbleFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), selected ? .4f:1};
+            float[] wobbleFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), getAlpha(), selected ? .4f:1};
             List<float[]> wobbleIndexes = List.of(new float[]{0}, new float[]{1}, new float[]{2}, new float[]{3});
             Shape2d.Poly poly = Shape2d.createRect(areaPos, areaSize, new ShapeMode.AppendUnpack(wobbleFloats, wobbleIndexes));
             sb.pushSeparatedPolygon(poly);

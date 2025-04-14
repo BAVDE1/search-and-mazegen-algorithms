@@ -38,5 +38,6 @@ out vec4 colour;
 
 void main() {
     float alpha = v_texturePos.x > -1 ? texture(fontTexture, v_texturePos.xy).a : 1;
+    alpha *= v_colour.a / 255;
     colour = (v_colour * alpha) / 255;
 }

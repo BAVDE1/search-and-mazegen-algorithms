@@ -33,9 +33,9 @@ public class InputRange extends Input {
     }
 
     @Override
-    public void unselect() {
+    public void deselect() {
         thumbHeld = false;
-        super.unselect();
+        super.deselect();
     }
 
     public boolean isPointInBarArea(Vec2 point) {
@@ -80,13 +80,13 @@ public class InputRange extends Input {
         updateThumbPos();
 
         // range bar
-        float[] barFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), mouseHoveringBar || thumbHeld ? .6f:.2f};
+        float[] barFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), getAlpha(), mouseHoveringBar || thumbHeld ? .6f:.2f};
         java.util.List<float[]> wobbleIndexes = List.of(new float[]{0}, new float[]{1}, new float[]{2}, new float[]{3});
         Shape2d.Poly bar = Shape2d.createRect(barPos, barSize, new ShapeMode.AppendUnpack(barFloats, wobbleIndexes));
         sb.pushSeparatedPolygon(bar);
 
         // thumb
-        float[] thumbFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), .2f};
+        float[] thumbFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), getAlpha(), .2f};
         Shape2d.Poly thumb = Shape2d.createRect(thumbPos, thumbSize, new ShapeMode.AppendUnpack(thumbFloats, wobbleIndexes));
         sb.pushSeparatedPolygon(thumb);
     }

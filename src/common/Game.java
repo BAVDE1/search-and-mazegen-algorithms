@@ -174,9 +174,9 @@ public class Game extends GameBase {
 
         actionButtons.setupBufferObjects();
         startBtn = new Button(new Vec2(480, 35), new Vec2(160, 50), "start search", Color.GREEN);
-        Button clearSearch = new Button(new Vec2(480, 105), new Vec2(160, 30), "clear search", Color.GRAY);
-        Button genMazeAction = new Button(new Vec2(720, 35), new Vec2(160, 50), "generate maze", Color.LIGHT_GRAY);
-        Button clearMaze = new Button(new Vec2(720, 105), new Vec2(160, 30), "clear maze", Color.GRAY);
+        Button clearSearch = new Button(new Vec2(480, 100), new Vec2(160, 30), "clear search", Color.GRAY);
+        Button genMazeAction = new Button(new Vec2(720, 35), new Vec2(160, 50), "generate maze", Color.MAGENTA);
+        Button clearMaze = new Button(new Vec2(720, 100), new Vec2(160, 30), "clear maze", Color.GRAY);
         clearSearch.textScale = clearMaze.textScale = .9f;
         actionButtons.addButton(startBtn, clearSearch, genMazeAction, clearMaze);
 
@@ -219,8 +219,9 @@ public class Game extends GameBase {
         mazeInputGroup.setVisible(false);
 
         framesInputGroup.setupBufferObjects();
-        InputRange opf = new InputRange(new Vec2(750, 20), "op / frames", 1, 0, 50, Color.YELLOW);
+        InputRange opf = new InputRange(new Vec2(680, 20), "op / frames", 1, 0, 50, Color.YELLOW);
         InputRange fpo = new InputRange(new Vec2(900, 20), "frames / op", 1, 0, 50, Color.YELLOW);
+        opf.disabled = true;
         framesInputGroup.addInput(opf, fpo);
         framesInputGroup.setVisible(false);
 
