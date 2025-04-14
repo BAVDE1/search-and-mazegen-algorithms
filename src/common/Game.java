@@ -29,11 +29,15 @@ public class Game extends GameBase {
     Maze maze = new Maze();
 
     TextRenderer textRenderer = new TextRenderer();
+
+    ButtonGroup navActionButtons = new ButtonGroup();
+    ButtonGroup navAlgorithmButtons = new ButtonGroup();
     ButtonGroup actionButtons = new ButtonGroup();
-    ButtonGroup modeButtons = new ButtonGroup();
     ButtonGroup mazeGenerationButtons = new ButtonGroup();
     ButtonGroup searchAlgorithmButtons = new ButtonGroup();
-    InputGroup inputGroup = new InputGroup();
+
+    InputGroup mazeInputGroup = new InputGroup();
+    InputGroup framesInputGroup = new InputGroup();
 
     private final ShaderHelper separatorSh = new ShaderHelper();
     private final VertexArray separatorVa = new VertexArray();
@@ -96,31 +100,36 @@ public class Game extends GameBase {
             }
             if (action == 1) {
                 if (key >= 0 && key < heldKeys.length) heldKeys[key] = 1;
-                inputGroup.keyPressed(key, scancode);
+                mazeInputGroup.keyPressed(key, scancode);
+                framesInputGroup.keyPressed(key, scancode);
             }
         });
         GLFW.glfwSetMouseButtonCallback(this.window.handle, (window, button, action, mode) -> {
             if (action == 0) {
                 this.heldMouseKeys[button] = 0;
-                inputGroup.mouseUp();
+                framesInputGroup.mouseUp();
             }
             if (action == 1) {
                 this.heldMouseKeys[button] = 1;
                 if (button == 0) this.mousePosOnClick.set(this.mousePos);
                 actionButtons.mouseClicked();
-                modeButtons.mouseClicked();
+                navActionButtons.mouseClicked();
+                navAlgorithmButtons.mouseClicked();
                 mazeGenerationButtons.mouseClicked();
                 searchAlgorithmButtons.mouseClicked();
-                inputGroup.mouseDown(mousePos);
+                mazeInputGroup.mouseDown(mousePos);
+                framesInputGroup.mouseDown(mousePos);
             }
         });
         glfwSetCursorPosCallback(window.handle, (window, xPos, yPos) -> {
             mousePos.set((float) xPos, (float) yPos);
             actionButtons.updateMouse(mousePos);
-            modeButtons.updateMouse(mousePos);
+            navActionButtons.updateMouse(mousePos);
+            navAlgorithmButtons.updateMouse(mousePos);
             mazeGenerationButtons.updateMouse(mousePos);
             searchAlgorithmButtons.updateMouse(mousePos);
-            inputGroup.updateMouse(mousePos);
+            mazeInputGroup.updateMouse(mousePos);
+            framesInputGroup.updateMouse(mousePos);
         });
     }
 
@@ -137,13 +146,42 @@ public class Game extends GameBase {
         textRenderer.pushTextObject(at, selectedAlgorithms);
 
         // buttons
-        actionButtons.setupBufferObjects();
-        startBtn = new Button(new Vec2(300, 55), new Vec2(120, 50), "start search", Color.GREEN);
-        Button genAction = new Button(new Vec2(450, 55), new Vec2(150, 50), "generate maze", Color.LIGHT_GRAY);
-        actionButtons.addButton(startBtn, genAction);
+        navActionButtons.setupBufferObjects();
+        navActionButtons.radioToggles = true;
+        ToggleButton actionPage = new ToggleButton(new Vec2(270, 25), new Vec2(100, 30), "action");
+        ToggleButton framesPage = new ToggleButton(new Vec2(270, 65), new Vec2(100, 30), "frames");
+        ToggleButton mazePage = new ToggleButton(new Vec2(270, 105), new Vec2(100, 30), "maze");
+        actionPage.addCallback((Button btn) -> {
+            ToggleButton toggleButton = (ToggleButton) btn;
+            actionButtons.setVisible(toggleButton.toggled);
+            mazeInputGroup.setVisible(!toggleButton.toggled);
+            framesInputGroup.setVisible(!toggleButton.toggled);
+        });
+        framesPage.addCallback((Button btn) -> {
+            ToggleButton toggleButton = (ToggleButton) btn;
+            actionButtons.setVisible(!toggleButton.toggled);
+            mazeInputGroup.setVisible(!toggleButton.toggled);
+            framesInputGroup.setVisible(toggleButton.toggled);
+        });
+        mazePage.addCallback((Button btn) -> {
+            ToggleButton toggleButton = (ToggleButton) btn;
+            actionButtons.setVisible(!toggleButton.toggled);
+            mazeInputGroup.setVisible(toggleButton.toggled);
+            framesInputGroup.setVisible(!toggleButton.toggled);
+        });
+        navActionButtons.addButton(actionPage, framesPage, mazePage);
+        navActionButtons.toggleBtn(actionPage, true);
 
-        modeButtons.setupBufferObjects();
-        modeButtons.radioToggles = true;
+        actionButtons.setupBufferObjects();
+        startBtn = new Button(new Vec2(480, 35), new Vec2(160, 50), "start search", Color.GREEN);
+        Button clearSearch = new Button(new Vec2(480, 105), new Vec2(160, 30), "clear search", Color.GRAY);
+        Button genMazeAction = new Button(new Vec2(720, 35), new Vec2(160, 50), "generate maze", Color.LIGHT_GRAY);
+        Button clearMaze = new Button(new Vec2(720, 105), new Vec2(160, 30), "clear maze", Color.GRAY);
+        clearSearch.textScale = clearMaze.textScale = .9f;
+        actionButtons.addButton(startBtn, clearSearch, genMazeAction, clearMaze);
+
+        navAlgorithmButtons.setupBufferObjects();
+        navAlgorithmButtons.radioToggles = true;
         ToggleButton search = new ToggleButton(new Vec2(25, 30), new Vec2(200, 40), "search maze");
         ToggleButton gen = new ToggleButton(new Vec2(25, 90), new Vec2(200, 40), "maze generation");
         search.addCallback((Button btn) -> {
@@ -151,8 +189,8 @@ public class Game extends GameBase {
             mazeGenerationButtons.setVisible(!toggleButton.toggled);
             searchAlgorithmButtons.setVisible(toggleButton.toggled);
         });
-        modeButtons.addButton(search, gen);
-        modeButtons.toggleBtn(search, true);
+        navAlgorithmButtons.addButton(search, gen);
+        navAlgorithmButtons.toggleBtn(search, true);
 
         mazeGenerationButtons.setupBufferObjects();
         mazeGenerationButtons.radioToggles = true;
@@ -174,10 +212,17 @@ public class Game extends GameBase {
         searchAlgorithmButtons.toggleBtn(df, true);
 
         // inputs
-        inputGroup.setupBufferObjects();
+        mazeInputGroup.setupBufferObjects();
+        InputRange mazeSize = new InputRange(new Vec2(750, 20), "maze size", 20, 5, 50, Color.YELLOW);
+        InputRange mazeWobble = new InputRange(new Vec2(900, 20), "wobble", 4, 0, 20, Color.YELLOW);
+        mazeInputGroup.addInput(mazeSize, mazeWobble);
+        mazeInputGroup.setVisible(false);
+
+        framesInputGroup.setupBufferObjects();
+        InputRange opf = new InputRange(new Vec2(750, 20), "op / frames", 1, 0, 50, Color.YELLOW);
         InputRange fpo = new InputRange(new Vec2(900, 20), "frames / op", 1, 0, 50, Color.YELLOW);
-        InputRange ms = new InputRange(new Vec2(750, 20), "maze size", 20, 5, 50, Color.YELLOW);
-        inputGroup.addInput(fpo, ms);
+        framesInputGroup.addInput(opf, fpo);
+        framesInputGroup.setVisible(false);
 
         // separators
         separatorSh.autoInitializeShadersMulti("shaders/simple_colour.glsl");
@@ -215,11 +260,14 @@ public class Game extends GameBase {
         textRenderer.draw();
 
         glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);  // special render mode for buttons
+        navActionButtons.renderAll();
+        navAlgorithmButtons.renderAll();
+
         actionButtons.renderAll();
-        modeButtons.renderAll();
         mazeGenerationButtons.renderAll();
         searchAlgorithmButtons.renderAll();
-        inputGroup.renderAll();
+        mazeInputGroup.renderAll();
+        framesInputGroup.renderAll();
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         separatorSh.bind();
