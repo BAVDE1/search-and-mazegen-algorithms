@@ -65,6 +65,7 @@ public class InputRange extends Input {
         if (!newVal.equals(value)) {
             value = newVal;
             group.hasChanged = true;
+            fireCallbacks();
         }
     }
 

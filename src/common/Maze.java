@@ -3,6 +3,7 @@ package common;
 import boilerplate.rendering.*;
 import boilerplate.utility.Vec2;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
@@ -14,11 +15,12 @@ public class Maze {
     public static char VISITED = '-';
     public static char FOCUSING = '+';
 
-    public Vec2 pos = new Vec2(400);
-    public Vec2 size = new Vec2(200);
+    public Vec2 pos = new Vec2(520, 220);
+    public Vec2 size = new Vec2(400);
 
-    private int gridSize = 3;
-    private final int gridMargin = 40;
+    public static final int MIN_GRID_SIZE = 5;
+    public static final int MAX_GRID_SIZE = 50;
+    private int gridSize = 10;
     private char[][] mazeGrid = new char[gridSize][gridSize];
 
     private final ShaderHelper shWall = new ShaderHelper();
@@ -32,9 +34,13 @@ public class Maze {
     public boolean hasChangedWalls = true;
     public boolean hasChangedSpace = true;
 
+    public float wobbleFrequency = 2;
+
     public void setupBufferObjects() {
         shWall.autoInitializeShadersMulti("shaders/maze_wall.glsl");
         shSpace.autoInitializeShadersMulti("shaders/maze_space.glsl");
+        setWobbleFrequency(wobbleFrequency);
+        setGridSize(gridSize);
         ShaderHelper.uniformResolutionData(shWall, Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
         ShaderHelper.uniformResolutionData(shSpace, Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
 
@@ -47,7 +53,6 @@ public class Maze {
         wallLayout.pushFloat(2);  // pos
         wallLayout.pushFloat(1);  // wobble strength
         wallLayout.pushFloat(1);  // wobble index
-        wallLayout.pushFloat(1);  // alpha
         vaWall.pushBuffer(vbWall, wallLayout);
         sbWall.setAdditionalVertFloats(wallLayout.getTotalItems() - 2);  // minus pos
 
@@ -117,7 +122,10 @@ public class Maze {
     }
 
     public void reBuildBuffers() {
+        int gridMargin = 40;
+        boolean separateNext = false;
         Vec2 tileSize = size.div(gridSize);
+
         for (int y = -1; y < gridSize+1; y++) {
             for (int x = -1; x < gridSize+1; x++) {
                 char c = get(x, y);
@@ -126,41 +134,68 @@ public class Maze {
                 boolean isMarginTile = isOutOfBounds(x, y);
 
                 if (hasChangedWalls) {
-                    float[] wobbleStrength = new float[]{2};
-                    List<float[]> wobbleIndexes;
-
-                    if (y % 2 == 0) {
-                        if (x % 2 == 0) {
-                            wobbleIndexes = List.of(new float[]{0, 1}, new float[]{1, 1}, new float[]{2, 1}, new float[]{3, 1});
-                        } else {
-                            wobbleIndexes = List.of(new float[]{2, 1}, new float[]{3, 1}, new float[]{0, 1}, new float[]{1, 1});
-                        }
-                    } else {
-                        if (x % 2 == 0) {
-                            wobbleIndexes = List.of(new float[]{1, 1}, new float[]{0, 1}, new float[]{3, 1}, new float[]{2, 1});
-                        } else {
-                            wobbleIndexes = List.of(new float[]{3, 1}, new float[]{2, 1}, new float[]{1, 1}, new float[]{0, 1});
-                        }
-                    }
+                    List<float[]> wobbleFloats = getWobbleFloats(x, y);
 
                     // margins
                     if (isMarginTile) {
-                        Vec2 marginTilePos = tilePos.add(x > -1 ? 0 : tileSize.x-gridMargin, y > -1 ? 0 : tileSize.y-gridMargin);
-                        Vec2 marginTileSize = new Vec2(x > -1 && x < gridSize ? tileSize.x : gridMargin, y > -1 && y < gridSize ? tileSize.y : gridMargin);
-                        Shape2d.Poly poly = Shape2d.createRect(marginTilePos, marginTileSize, new ShapeMode.AppendUnpack(wobbleStrength, wobbleIndexes));
-                        sbWall.pushSeparatedPolygon(poly);
+                        boolean xEdgeLeft = x == -1;
+                        boolean yEdgeTop = y == -1;
+                        boolean xEdgeRight = x == gridSize;
+                        boolean yEdgeBtm = y == gridSize;
+                        Vec2 marginTilePos = tilePos.add(xEdgeLeft ? tileSize.x- gridMargin : 0, yEdgeTop ? tileSize.y- gridMargin : 0);
+                        Vec2 marginTileSize = new Vec2(xEdgeLeft || xEdgeRight ? gridMargin : tileSize.x, yEdgeTop || yEdgeBtm ? gridMargin : tileSize.y);
+
+                        // stabilize edges
+                        if (xEdgeLeft || yEdgeTop) wobbleFloats.get(0)[0] = 0;
+                        if (xEdgeLeft || yEdgeBtm) wobbleFloats.get(1)[0] = 0;
+                        if (xEdgeRight || yEdgeTop) wobbleFloats.get(2)[0] = 0;
+                        if (xEdgeRight || yEdgeBtm) wobbleFloats.get(3)[0] = 0;
+
+                        Shape2d.Poly poly = Shape2d.createRect(marginTilePos, marginTileSize, new ShapeMode.Unpack(wobbleFloats));
+                        if (xEdgeLeft) sbWall.pushSeparatedPolygon(poly);
+                        else sbWall.pushPolygon(poly);
                         continue;
                     }
 
-                    Shape2d.Poly poly = Shape2d.createRect(tilePos, tileSize, new ShapeMode.AppendUnpack(wobbleStrength, wobbleIndexes));
-                    sbWall.pushSeparatedPolygon(poly);
+                    // walls
+                    if (c == EMPTY) separateNext = true;
+                    else {
+                        Shape2d.Poly poly = Shape2d.createRect(tilePos, tileSize, new ShapeMode.Unpack(wobbleFloats));
+                        if (separateNext) sbWall.pushSeparatedPolygon(poly);
+                        else sbWall.pushPolygon(poly);
+                    }
                 }
 
+                // spaces
                 if (hasChangedSpace && !isMarginTile) {
                     continue;
                 }
             }
         }
+    }
+
+    private static final List<float[]> wobbleFloatsA = List.of(new float[]{0, 0}, new float[]{0, 1}, new float[]{0, 2}, new float[]{0, 3});
+    private static final List<float[]> wobbleFloatsB = List.of(new float[]{0, 2}, new float[]{0, 3}, new float[]{0, 0}, new float[]{0, 1});
+    private static final List<float[]> wobbleFloatsC = List.of(new float[]{0, 1}, new float[]{0, 0}, new float[]{0, 3}, new float[]{0, 2});
+    private static final List<float[]> wobbleFloatsD = List.of(new float[]{0, 3}, new float[]{0, 2}, new float[]{0, 1}, new float[]{0, 0});
+    private static final float wobbleSpeed = .5f;
+    private static List<float[]> getWobbleFloats(int x, int y) {
+        List<float[]> wobbleIndexes;
+        if (y % 2 == 0) wobbleIndexes = x % 2 == 0 ? wobbleFloatsA : wobbleFloatsB;
+        else wobbleIndexes = x % 2 == 0 ? wobbleFloatsC : wobbleFloatsD;
+        for (float[] floats : wobbleIndexes) floats[0] = wobbleSpeed;
+        return wobbleIndexes;
+    }
+
+    public void setGridSize(int val) {
+        gridSize = val;
+        ShaderHelper.uniform1f(shWall, "scale", ((float) gridSize + 20) / MAX_GRID_SIZE);
+        clearMaze();
+    }
+
+    public void setWobbleFrequency(float val) {
+        wobbleFrequency = val;
+        ShaderHelper.uniform1f(shWall, "wobbleFrequency", wobbleFrequency);
     }
 
     public void render() {

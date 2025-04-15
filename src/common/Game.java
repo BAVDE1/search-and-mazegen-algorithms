@@ -97,6 +97,11 @@ public class Game extends GameBase {
                 if (key == GLFW_KEY_ESCAPE) {
                     glfwSetWindowShouldClose(window, true);
                 }
+                if (key == GLFW_KEY_T) {
+                    maze.set(1, 1, Maze.EMPTY);
+                    maze.set(2, 1, Maze.EMPTY);
+                    maze.set(3, 3, Maze.EMPTY);
+                }
             }
             if (action == 1) {
                 if (key >= 0 && key < heldKeys.length) heldKeys[key] = 1;
@@ -107,6 +112,7 @@ public class Game extends GameBase {
         GLFW.glfwSetMouseButtonCallback(this.window.handle, (window, button, action, mode) -> {
             if (action == 0) {
                 this.heldMouseKeys[button] = 0;
+                mazeInputGroup.mouseUp();
                 framesInputGroup.mouseUp();
             }
             if (action == 1) {
@@ -213,8 +219,10 @@ public class Game extends GameBase {
 
         // inputs
         mazeInputGroup.setupBufferObjects();
-        InputRange mazeSize = new InputRange(new Vec2(750, 20), "maze size", 20, 5, 50, Color.YELLOW);
-        InputRange mazeWobble = new InputRange(new Vec2(900, 20), "wobble", 4, 0, 20, Color.YELLOW);
+        InputRange mazeSize = new InputRange(new Vec2(750, 20), "maze size", maze.getGridSize(), Maze.MIN_GRID_SIZE, Maze.MAX_GRID_SIZE, Color.YELLOW);
+        InputRange mazeWobble = new InputRange(new Vec2(900, 20), "wobble", (int) maze.wobbleFrequency, 0, 15, Color.YELLOW);
+        mazeSize.addCallback((Input input, String val) -> maze.setGridSize(Integer.parseInt(val)));
+        mazeWobble.addCallback((Input input, String val) -> maze.setWobbleFrequency(Float.parseFloat(val)));
         mazeInputGroup.addInput(mazeSize, mazeWobble);
         mazeInputGroup.setVisible(false);
 
