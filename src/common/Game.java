@@ -188,7 +188,7 @@ public class Game extends GameBase {
 
         navAlgorithmButtons.setupBufferObjects();
         navAlgorithmButtons.radioToggles = true;
-        ToggleButton search = new ToggleButton(new Vec2(25, 30), new Vec2(200, 40), "search maze");
+        ToggleButton search = new ToggleButton(new Vec2(25, 30), new Vec2(200, 40), "search algorithm");
         ToggleButton gen = new ToggleButton(new Vec2(25, 90), new Vec2(200, 40), "maze generation");
         search.addCallback((Button btn) -> {
             ToggleButton toggleButton = (ToggleButton) btn;

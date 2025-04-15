@@ -2,7 +2,7 @@
 #version 450 core
 
 layout(location = 0) in vec2 pos;
-layout(location = 1) in float wobbleStrength;
+layout(location = 1) in float wobbleSpeed;
 layout(location = 2) in float wobbleIndex;
 
 uniform mat4 projectionMatrix;
@@ -11,10 +11,10 @@ uniform float time;
 
 void main() {
     // wobble
-    float t = time * (5 * wobbleStrength) + wobbleIndex;
+    float t = time * (5 * wobbleSpeed) + wobbleIndex;
     vec2 wobble = vec2(sin(t));
     wobble.y += cos(t * 1.5);
-    wobble *= wobbleFrequency * int(wobbleStrength > 0.001);  // yes or no
+    wobble *= wobbleFrequency * int(wobbleSpeed > 0.001);  // yes or no
 
     gl_Position = vec4(pos.xy + wobble, 1, 1) * projectionMatrix;
 }

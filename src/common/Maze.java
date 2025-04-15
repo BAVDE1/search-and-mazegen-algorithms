@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLE_STRIP;
+import static org.lwjgl.opengl.GL11.*;
 
 public class Maze {
     public static char WALL = '\0';  // null character
@@ -35,6 +35,7 @@ public class Maze {
     public boolean hasChangedSpace = true;
 
     public float wobbleFrequency = 2;
+    private static final float wobbleSpeed = .5f;
 
     public void setupBufferObjects() {
         shWall.autoInitializeShadersMulti("shaders/maze_wall.glsl");
@@ -51,14 +52,16 @@ public class Maze {
 
         VertexArray.Layout wallLayout = new VertexArray.Layout();
         wallLayout.pushFloat(2);  // pos
-        wallLayout.pushFloat(1);  // wobble strength
+        wallLayout.pushFloat(1);  // wobble speed
         wallLayout.pushFloat(1);  // wobble index
         vaWall.pushBuffer(vbWall, wallLayout);
-        sbWall.setAdditionalVertFloats(wallLayout.getTotalItems() - 2);  // minus pos
+        sbWall.setAdditionalVertFloats(wallLayout.getTotalItems() - 2);  // -pos
 
         VertexArray.Layout spaceLayout = new VertexArray.Layout();
         spaceLayout.pushFloat(2);  // pos
         spaceLayout.pushFloat(1);  // status
+        spaceLayout.pushFloat(1);  // wobble speed
+        spaceLayout.pushFloat(1);  // wobble index
         vaSpace.pushBuffer(vbSpace, spaceLayout);
         sbSpace.setAdditionalVertFloats(spaceLayout.getTotalItems() - 2);  // -pos
     }
@@ -96,9 +99,9 @@ public class Maze {
     }
     public void set(int x, int y, char val) {
         if (isOutOfBounds(x, y)) return;
-        if (mazeGrid[y][x] == val || !(val == WALL || val == EMPTY || val == VISITED || val == FOCUSING)) return;
-        if (val == EMPTY) hasChangedWalls = true;
-        else hasChangedSpace = true;
+        if (get(x, y) == val || !(val == WALL || val == EMPTY || val == VISITED || val == FOCUSING)) return;
+        hasChangedSpace = true;
+        if (val == EMPTY || val == WALL) hasChangedWalls = true;
         mazeGrid[y][x] = val;
     }
 
@@ -126,16 +129,16 @@ public class Maze {
         boolean separateNext = false;
         Vec2 tileSize = size.div(gridSize);
 
+        Vec2 prevIndex = new Vec2(-2);
         for (int y = -1; y < gridSize+1; y++) {
             for (int x = -1; x < gridSize+1; x++) {
                 char c = get(x, y);
                 Vec2 tilePos = new Vec2(x, y).mul(tileSize).add(pos);
 
+                List<float[]> wobbleFloats = getWobbleFloats(x, y);
                 boolean isMarginTile = isOutOfBounds(x, y);
 
                 if (hasChangedWalls) {
-                    List<float[]> wobbleFloats = getWobbleFloats(x, y);
-
                     // margins
                     if (isMarginTile) {
                         boolean xEdgeLeft = x == -1;
@@ -167,10 +170,14 @@ public class Maze {
                 }
 
                 // spaces
-                if (hasChangedSpace && !isMarginTile) {
-                    continue;
+                if (hasChangedSpace && !isMarginTile && c != WALL) {
+                    Shape2d.Poly poly = Shape2d.createRect(tilePos, tileSize, new ShapeMode.AppendUnpack(new float[] {0}, wobbleFloats));
+                    if (prevIndex.y != y || prevIndex.x + 1 != x) sbSpace.pushSeparatedPolygon(poly);
+                    else sbSpace.pushPolygon(poly);
                 }
+                prevIndex.x = x;
             }
+            prevIndex.y = y;
         }
     }
 
@@ -178,7 +185,6 @@ public class Maze {
     private static final List<float[]> wobbleFloatsB = List.of(new float[]{0, 2}, new float[]{0, 3}, new float[]{0, 0}, new float[]{0, 1});
     private static final List<float[]> wobbleFloatsC = List.of(new float[]{0, 1}, new float[]{0, 0}, new float[]{0, 3}, new float[]{0, 2});
     private static final List<float[]> wobbleFloatsD = List.of(new float[]{0, 3}, new float[]{0, 2}, new float[]{0, 1}, new float[]{0, 0});
-    private static final float wobbleSpeed = .5f;
     private static List<float[]> getWobbleFloats(int x, int y) {
         List<float[]> wobbleIndexes;
         if (y % 2 == 0) wobbleIndexes = x % 2 == 0 ? wobbleFloatsA : wobbleFloatsB;
@@ -189,13 +195,16 @@ public class Maze {
 
     public void setGridSize(int val) {
         gridSize = val;
-        ShaderHelper.uniform1f(shWall, "scale", ((float) gridSize + 20) / MAX_GRID_SIZE);
+        float scale = ((float) gridSize + 20) / MAX_GRID_SIZE;
+        ShaderHelper.uniform1f(shWall, "scale", scale);
+        ShaderHelper.uniform1f(shSpace, "scale", scale);
         clearMaze();
     }
 
     public void setWobbleFrequency(float val) {
         wobbleFrequency = val;
         ShaderHelper.uniform1f(shWall, "wobbleFrequency", wobbleFrequency);
+        ShaderHelper.uniform1f(shSpace, "wobbleFrequency", wobbleFrequency);
     }
 
     public void render() {
@@ -208,11 +217,14 @@ public class Maze {
             hasChangedWalls = hasChangedSpace = false;
         }
 
-        shWall.bind();
-        ShaderHelper.uniform1f(shWall, "time", (float) glfwGetTime());
-        Renderer.draw(GL_TRIANGLE_STRIP, vaWall, sbWall.getVertexCount());
+        float t = (float) glfwGetTime();
+        ShaderHelper.uniform1f(shWall, "time", t);
+        ShaderHelper.uniform1f(shSpace, "time", t);
 
         shSpace.bind();
         Renderer.draw(GL_TRIANGLE_STRIP, vaSpace, sbSpace.getVertexCount());
+
+        shWall.bind();
+        Renderer.draw(GL_TRIANGLE_STRIP, vaWall, sbWall.getVertexCount());
     }
 }
