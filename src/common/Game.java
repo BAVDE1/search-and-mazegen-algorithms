@@ -45,9 +45,11 @@ public class Game extends GameBase {
     private final VertexBuffer separatorVb = new VertexBuffer();
     private final BufferBuilder2f separatorSb = new BufferBuilder2f();
 
-    boolean searchesListed = true;
     Button startBtn;
     TextRenderer.TextObject selectedAlgorithms;
+
+    Runner mazeRunner;
+    Runner searchRunner;
 
     @Override
     public void start() {
@@ -147,7 +149,7 @@ public class Game extends GameBase {
 
         // text
         textRenderer.setupBufferObjects();
-        TextRenderer.TextObject at = new TextRenderer.TextObject(1, "algorithm", new Vec2(75, 185));
+        TextRenderer.TextObject at = new TextRenderer.TextObject(1, "select algorithm", new Vec2(35, 185));
         at.setTextColour(Color.YELLOW);
         selectedAlgorithms = new TextRenderer.TextObject(2, "", new Vec2(20, Constants.SCREEN_SIZE.height - 60));
         selectedAlgorithms.setTextColour(Color.YELLOW);
@@ -221,7 +223,8 @@ public class Game extends GameBase {
 
         // inputs
         mazeInputGroup.setupBufferObjects();
-        InputRange mazeSize = new InputRange(new Vec2(750, 20), "maze size", maze.getGridSize(), Maze.MIN_GRID_SIZE, Maze.MAX_GRID_SIZE, Color.YELLOW);
+        InputRange mazeSize = new InputRange(new Vec2(720, 20), "maze size", maze.getGridSize(), Maze.MIN_GRID_SIZE, Maze.MAX_GRID_SIZE, Color.YELLOW);
+        mazeSize.barRangeWidth = 140;
         InputRange mazeWobble = new InputRange(new Vec2(900, 20), "wobble", (int) maze.wobbleFrequency, 0, 15, Color.YELLOW);
         mazeSize.addCallback((Input input, String val) -> maze.setGridSize(Integer.parseInt(val)));
         mazeWobble.addCallback((Input input, String val) -> maze.setWobbleFrequency(Float.parseFloat(val)));
@@ -274,9 +277,9 @@ public class Game extends GameBase {
         navActionButtons.renderAll();
         navAlgorithmButtons.renderAll();
 
-        actionButtons.renderAll();
         mazeGenerationButtons.renderAll();
         searchAlgorithmButtons.renderAll();
+        actionButtons.renderAll();
         mazeInputGroup.renderAll();
         framesInputGroup.renderAll();
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

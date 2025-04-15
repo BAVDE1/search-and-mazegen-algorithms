@@ -34,7 +34,7 @@ public class Maze {
     private final BufferBuilder2f sbTiles = new BufferBuilder2f(true);
     public boolean hasChanged = true;
 
-    public float wobbleFrequency = 2;
+    public float wobbleFrequency = 1;
     private static final float wobbleSpeed = .5f;
 
     public void setupBufferObjects() {
@@ -124,7 +124,7 @@ public class Maze {
     }
 
     private float percentSize(int size) {
-        return ((float) size + 20) / MAX_GRID_SIZE;
+        return ((float) size + 25) / MAX_GRID_SIZE;
     }
 
     private void updateScaleUniforms() {
@@ -142,7 +142,6 @@ public class Maze {
 
     public void setWobbleFrequency(float val) {
         wobbleFrequency = val;
-        ShaderHelper.uniform1f(shBg, "wobbleFrequency", wobbleFrequency);
         ShaderHelper.uniform1f(shTiles, "wobbleFrequency", wobbleFrequency);
     }
 
