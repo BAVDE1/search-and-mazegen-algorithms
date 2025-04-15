@@ -12,6 +12,7 @@ import boilerplate.utility.Vec2;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -98,9 +99,10 @@ public class Game extends GameBase {
                     glfwSetWindowShouldClose(window, true);
                 }
                 if (key == GLFW_KEY_T) {
-                    maze.set(1, 1, Maze.EMPTY);
-                    maze.set(2, 1, Maze.EMPTY);
-                    maze.set(3, 3, Maze.EMPTY);
+                    maze.set(1, 1, ThreadLocalRandom.current().nextInt(1, 4));
+                    maze.set(2, 1, ThreadLocalRandom.current().nextInt(1, 4));
+                    maze.set(3, 1, ThreadLocalRandom.current().nextInt(1, 4));
+                    maze.set(3, 3, ThreadLocalRandom.current().nextInt(1, 4));
                 }
             }
             if (action == 1) {
@@ -220,7 +222,7 @@ public class Game extends GameBase {
         // inputs
         mazeInputGroup.setupBufferObjects();
         InputRange mazeSize = new InputRange(new Vec2(750, 20), "maze size", maze.getGridSize(), Maze.MIN_GRID_SIZE, Maze.MAX_GRID_SIZE, Color.YELLOW);
-        InputRange mazeWobble = new InputRange(new Vec2(900, 20), "wobble", (int) maze.wobbleFrequency, 0, 15, Color.YELLOW);
+        InputRange mazeWobble = new InputRange(new Vec2(900, 20), "wobble", (int) maze.wobbleFrequency, 0, 10, Color.YELLOW);
         mazeSize.addCallback((Input input, String val) -> maze.setGridSize(Integer.parseInt(val)));
         mazeWobble.addCallback((Input input, String val) -> maze.setWobbleFrequency(Float.parseFloat(val)));
         mazeInputGroup.addInput(mazeSize, mazeWobble);

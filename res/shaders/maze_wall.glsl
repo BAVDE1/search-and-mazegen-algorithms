@@ -49,7 +49,7 @@ void main() {
     float n1 = noise((gl_FragCoord.xy + vec2(-time, cos(time)) * 10) * (.01 * scale));
     float n2 = noise((gl_FragCoord.xy + sin(time)) * (.02 * scale));
     float n = (n1 + n2) * .5;
-    float mix1 = mix(.4, .5, smoothstep(.35, .45, n));
+    float mix1 = mix(.4, .5, smoothstep(.3, .4, n));
     float mix2 = mix(mix1, .65, smoothstep(.5, .6, n));
     float mix3 = mix(mix2, .8, smoothstep(.65, .75, n));
     colour = vec4(1, 1, 1, mix3 * .2);

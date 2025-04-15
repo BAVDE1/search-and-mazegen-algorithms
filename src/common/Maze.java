@@ -3,25 +3,31 @@ package common;
 import boilerplate.rendering.*;
 import boilerplate.utility.Vec2;
 
-import java.util.ArrayList;
+import javax.annotation.processing.SupportedSourceVersion;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.opengl.GL11.*;
 
 public class Maze {
-    public static char WALL = '\0';  // null character
-    public static char EMPTY = ' ';
-    public static char VISITED = '-';
-    public static char FOCUSING = '+';
+    public static final int WALL = 0;
+    public static final int EMPTY = 1;
+    public static final int VISITED = 2;
+    public static final int FOCUSING = 3;
+    private static final int START = 4;
+    private static final int END = 5;
 
     public Vec2 pos = new Vec2(520, 220);
     public Vec2 size = new Vec2(400);
 
+    private Vec2 startPos;
+    private Vec2 endPos;
+
     public static final int MIN_GRID_SIZE = 5;
     public static final int MAX_GRID_SIZE = 50;
     private int gridSize = 10;
-    private char[][] mazeGrid = new char[gridSize][gridSize];
+    private int[][] mazeGrid = new int[gridSize][gridSize];
 
     private final ShaderHelper shWall = new ShaderHelper();
     private final ShaderHelper shSpace = new ShaderHelper();
@@ -44,6 +50,7 @@ public class Maze {
         setGridSize(gridSize);
         ShaderHelper.uniformResolutionData(shWall, Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
         ShaderHelper.uniformResolutionData(shSpace, Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
+        ShaderHelper.uniform1f(shSpace, "maxScale", percentSize(MAX_GRID_SIZE));
 
         vaWall.genId();
         vaSpace.genId();
@@ -64,6 +71,7 @@ public class Maze {
         spaceLayout.pushFloat(1);  // wobble index
         vaSpace.pushBuffer(vbSpace, spaceLayout);
         sbSpace.setAdditionalVertFloats(spaceLayout.getTotalItems() - 2);  // -pos
+        clearMaze();
     }
 
     public void setSize(int newSize) {
@@ -73,7 +81,9 @@ public class Maze {
     }
 
     public void clearMaze() {
-        mazeGrid = new char[gridSize][gridSize];
+        mazeGrid = new int[gridSize][gridSize];
+        set(new Vec2(0, gridSize-1), START);
+        set(new Vec2(gridSize-1, 0), END);
         hasChangedWalls = hasChangedSpace = true;
     }
 
@@ -82,8 +92,8 @@ public class Maze {
     }
     public boolean hasVisited(int x, int y) {
         if (isOutOfBounds(x, y)) return false;
-        char c = get(x, y);
-        return c == VISITED || c == FOCUSING;
+        int s = get(x, y);
+        return s == VISITED || s == FOCUSING;
     }
 
     public boolean isWall(Vec2 pos) {
@@ -94,21 +104,21 @@ public class Maze {
         return mazeGrid[y][x] == WALL;
     }
 
-    public void set(Vec2 pos, char val) {
+    public void set(Vec2 pos, int val) {
         set((int) pos.x, (int) pos.y, val);
     }
-    public void set(int x, int y, char val) {
+    public void set(int x, int y, int val) {
         if (isOutOfBounds(x, y)) return;
-        if (get(x, y) == val || !(val == WALL || val == EMPTY || val == VISITED || val == FOCUSING)) return;
-        hasChangedSpace = true;
+        if (get(x, y) == val || !(val == WALL || val == EMPTY || val == VISITED || val == FOCUSING || val == START || val == END)) return;
         if (val == EMPTY || val == WALL) hasChangedWalls = true;
+        hasChangedSpace = true;
         mazeGrid[y][x] = val;
     }
 
-    public char get(Vec2 pos) {
+    public int get(Vec2 pos) {
         return get((int) pos.x, (int) pos.y);
     }
-    public char get(int x, int y) {
+    public int get(int x, int y) {
         if (isOutOfBounds(x, y)) return WALL;
         return mazeGrid[y][x];
     }
@@ -132,7 +142,7 @@ public class Maze {
         Vec2 prevIndex = new Vec2(-2);
         for (int y = -1; y < gridSize+1; y++) {
             for (int x = -1; x < gridSize+1; x++) {
-                char c = get(x, y);
+                int s = get(x, y);
                 Vec2 tilePos = new Vec2(x, y).mul(tileSize).add(pos);
 
                 List<float[]> wobbleFloats = getWobbleFloats(x, y);
@@ -161,7 +171,7 @@ public class Maze {
                     }
 
                     // walls
-                    if (c == EMPTY) separateNext = true;
+                    if (s == EMPTY) separateNext = true;
                     else {
                         Shape2d.Poly poly = Shape2d.createRect(tilePos, tileSize, new ShapeMode.Unpack(wobbleFloats));
                         if (separateNext) sbWall.pushSeparatedPolygon(poly);
@@ -170,14 +180,13 @@ public class Maze {
                 }
 
                 // spaces
-                if (hasChangedSpace && !isMarginTile && c != WALL) {
-                    Shape2d.Poly poly = Shape2d.createRect(tilePos, tileSize, new ShapeMode.AppendUnpack(new float[] {0}, wobbleFloats));
+                if (hasChangedSpace && !isMarginTile && s != WALL) {
+                    Shape2d.Poly poly = Shape2d.createRect(tilePos, tileSize, new ShapeMode.AppendUnpack(new float[] {s}, wobbleFloats));
                     if (prevIndex.y != y || prevIndex.x + 1 != x) sbSpace.pushSeparatedPolygon(poly);
                     else sbSpace.pushPolygon(poly);
+                    prevIndex.set(x, y);
                 }
-                prevIndex.x = x;
             }
-            prevIndex.y = y;
         }
     }
 
@@ -193,9 +202,13 @@ public class Maze {
         return wobbleIndexes;
     }
 
+    private float percentSize(int size) {
+        return ((float) size + 20) / MAX_GRID_SIZE;
+    }
+
     public void setGridSize(int val) {
         gridSize = val;
-        float scale = ((float) gridSize + 20) / MAX_GRID_SIZE;
+        float scale = percentSize(gridSize);
         ShaderHelper.uniform1f(shWall, "scale", scale);
         ShaderHelper.uniform1f(shSpace, "scale", scale);
         clearMaze();
