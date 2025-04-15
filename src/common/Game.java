@@ -222,7 +222,7 @@ public class Game extends GameBase {
         // inputs
         mazeInputGroup.setupBufferObjects();
         InputRange mazeSize = new InputRange(new Vec2(750, 20), "maze size", maze.getGridSize(), Maze.MIN_GRID_SIZE, Maze.MAX_GRID_SIZE, Color.YELLOW);
-        InputRange mazeWobble = new InputRange(new Vec2(900, 20), "wobble", (int) maze.wobbleFrequency, 0, 10, Color.YELLOW);
+        InputRange mazeWobble = new InputRange(new Vec2(900, 20), "wobble", (int) maze.wobbleFrequency, 0, 15, Color.YELLOW);
         mazeSize.addCallback((Input input, String val) -> maze.setGridSize(Integer.parseInt(val)));
         mazeWobble.addCallback((Input input, String val) -> maze.setWobbleFrequency(Float.parseFloat(val)));
         mazeInputGroup.addInput(mazeSize, mazeWobble);
