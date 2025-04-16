@@ -44,6 +44,7 @@ public abstract class Runner {
 
     public Stack<Cell> stack = new Stack<>();
     public ArrayList<Cell> array = new ArrayList<>();
+    public ArrayList<Cell> arrayOther = new ArrayList<>();
 
     public Runner(Maze maze, Game game) {
         this.maze = maze;
@@ -116,12 +117,26 @@ public abstract class Runner {
     };
 
     public Cell generateRandomCell() {
+        return generateRandomCell(true);
+    }
+    public Cell generateRandomCell(boolean evenOnly) {
         Vec2 startPos;
         do {
             int x = random.nextInt(0, maze.getGridSize() + 1);
             int y = random.nextInt(0, maze.getGridSize() + 1);
-            startPos = new Vec2(x, y).sub(x % 2, y % 2);
+            startPos = new Vec2(x, y);
+            if (evenOnly) startPos = startPos.sub(x % 2, y % 2);
         } while (maze.get(startPos) != Maze.WALL);
         return new Cell(startPos);
+    }
+
+    public void clearFocussingCells(ArrayList<Cell> theArray) {
+        if (!theArray.isEmpty()) {
+            for (Cell c : theArray) {
+                maze.set(c.pos, Maze.EMPTY);
+                if (c.hasInBetweenCell()) maze.set(c.inBetweenCell, Maze.EMPTY);
+            }
+            theArray.clear();
+        }
     }
 }

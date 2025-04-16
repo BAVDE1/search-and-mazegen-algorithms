@@ -11,6 +11,7 @@ public class MazeKruskal extends Runner {
     public static class Tree {
         Tree parent;
 
+        /** Retrieves the very first parent */
         public Tree root() {
             return parent != null ? parent.root() : this;
         }
@@ -46,6 +47,8 @@ public class MazeKruskal extends Runner {
     @Override
     public void start() {
         super.start();
+
+        // grab a set of all walls (separated in twos cause the walls are every 2nd rows and columns of the grid)
         for (int y = 0; y < maze.getGridSize(); y += 2) {
             for (int x = 0; x < maze.getGridSize(); x += 2) {
                 Vec2 pos = new Vec2(x, y);
@@ -70,7 +73,7 @@ public class MazeKruskal extends Runner {
         super.performOperation();
 
         if (stack.empty()) {
-            clearFocussingCells();
+            clearFocussingCells(array);
             finishMaze();
             return;
         }
@@ -95,24 +98,15 @@ public class MazeKruskal extends Runner {
         if (!set1.connected(set2)) {
             set1.connect(set2);
 
+            // set & update colours
             cellA.inBetweenCell = maze.getCellInBetween(cellA.pos, cellB.pos);
             maze.set(cellA.pos, Maze.FOCUSING);
             maze.set(cellB.pos, Maze.FOCUSING);
             maze.set(cellA.inBetweenCell, Maze.FOCUSING);
 
-            clearFocussingCells();
+            clearFocussingCells(array);
             array.add(cellA);
             array.add(cellB);
-        }
-    }
-
-    private void clearFocussingCells() {
-        if (!array.isEmpty()) {
-            for (Cell c : array) {
-                maze.set(c.pos, Maze.EMPTY);
-                if (c.hasInBetweenCell()) maze.set(c.inBetweenCell, Maze.EMPTY);
-            }
-            array.clear();
         }
     }
 }

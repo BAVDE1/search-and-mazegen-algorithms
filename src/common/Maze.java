@@ -117,6 +117,19 @@ public class Maze {
         return mazeGrid[y][x];
     }
 
+    public ArrayList<Vec2> getNonWallNeighbors(Vec2 pos, int step) {
+        return getNonWallNeighbors((int) pos.x, (int) pos.y, step);
+    }
+    public ArrayList<Vec2> getNonWallNeighbors(int x, int y, int step) {
+        ArrayList<Vec2> l = new ArrayList<>(4);
+        for (Vec2 off : List.of(new Vec2(0, step), new Vec2(step, 0), new Vec2(0, -step), new Vec2(-step, 0))) {
+            Vec2 neighbourPos = off.add(x, y);
+            int s = get(neighbourPos);
+            if (s != WALL && s != OUT_OF_BOUNDS) l.add(neighbourPos);
+        }
+        return l;
+    }
+
     public ArrayList<Vec2> getWallNeighbours(Vec2 pos, int step) {
         return getWallNeighbours((int) pos.x, (int) pos.y, step);
     }
@@ -129,6 +142,7 @@ public class Maze {
         return l;
     }
 
+    /** in between cells with 1 space in between */
     public Vec2 getCellInBetween(Vec2 p1, Vec2 p2) {
         int xDiff = (int) (p2.x - p1.x);
         int yDiff = (int) (p2.y - p1.y);

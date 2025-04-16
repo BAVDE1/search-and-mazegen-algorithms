@@ -14,7 +14,6 @@ public class MazeDepthFirst extends Runner {
 
     @Override
     public void start() {
-        if (running) return;
         super.start();
         Cell startCell = generateRandomCell();
         stack.add(startCell);
@@ -39,15 +38,16 @@ public class MazeDepthFirst extends Runner {
             return;
         }
 
-        int inx = random.nextInt(0, neighbours.size());
-        Cell chosenCell = new Cell(neighbours.get(inx));
-        chosenCell.inBetweenCell = maze.getCellInBetween(cell.pos, chosenCell.pos);
+        int randInx = random.nextInt(0, neighbours.size());
+        Cell chosenNeighbour = new Cell(neighbours.get(randInx));
+        chosenNeighbour.inBetweenCell = maze.getCellInBetween(cell.pos, chosenNeighbour.pos);
 
         stack.push(cell);
-        stack.push(chosenCell);
+        stack.push(chosenNeighbour);
 
-        if (chosenCell.hasInBetweenCell()) maze.set(chosenCell.inBetweenCell, Maze.FOCUSING);
+        // set colours
+        if (chosenNeighbour.hasInBetweenCell()) maze.set(chosenNeighbour.inBetweenCell, Maze.FOCUSING);
         maze.set(cell.pos, Maze.FOCUSING);
-        maze.set(chosenCell.pos, Maze.FOCUSING);
+        maze.set(chosenNeighbour.pos, Maze.FOCUSING);
     }
 }

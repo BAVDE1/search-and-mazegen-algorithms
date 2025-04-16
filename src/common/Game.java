@@ -11,6 +11,7 @@ import boilerplate.rendering.text.TextRenderer;
 import boilerplate.utility.Vec2;
 import mazeGen.MazeDepthFirst;
 import mazeGen.MazeKruskal;
+import mazeGen.MazePrim;
 import org.lwjgl.glfw.GLFW;
 import searching.SearchDepthFirst;
 
@@ -225,11 +226,11 @@ public class Game extends GameBase {
         ToggleButton rk = new ToggleButton(new Vec2(25, 290), new Vec2(200, 40), "rand kruskal", Color.YELLOW);
         rk.addCallback((Button btn) -> changeMazeRunner(new MazeKruskal(maze, this), btn));
         ToggleButton rp = new ToggleButton(new Vec2(25, 350), new Vec2(200, 40), "rand prim", Color.YELLOW);
+        rp.addCallback((Button btn) -> changeMazeRunner(new MazePrim(maze, this), btn));
         ToggleButton w = new ToggleButton(new Vec2(25, 410), new Vec2(200, 40), "wilson", Color.YELLOW);
         ToggleButton ft = new ToggleButton(new Vec2(25, 470), new Vec2(200, 40), "fractal tesselation", Color.YELLOW);
         mazeGenerationButtons.addButton(rdf, rk, rp, w, ft);
         mazeGenerationButtons.toggleBtn(rdf, true);
-        mazeRunner.complete = false;  // reset
 
         searchAlgorithmButtons.setupBufferObjects();
         searchAlgorithmButtons.radioToggles = true;
@@ -339,7 +340,7 @@ public class Game extends GameBase {
 
     private void changeMazeRunner(Runner newRunner, Button btn) {
         if (!((ToggleButton) btn).toggled) return;
-        newRunner.complete = true;
+        newRunner.complete = mazeRunner.running;
         newRunner.useFPO = mazeRunner.useFPO;  // transfer settings
         newRunner.opPerFrames = mazeRunner.opPerFrames;
         newRunner.framesPerOp = mazeRunner.framesPerOp;
