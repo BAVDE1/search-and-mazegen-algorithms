@@ -12,6 +12,7 @@ import boilerplate.utility.Vec2;
 import mazeGen.MazeDepthFirst;
 import mazeGen.MazeKruskal;
 import mazeGen.MazePrim;
+import mazeGen.MazeWilson;
 import org.lwjgl.glfw.GLFW;
 import searching.SearchDepthFirst;
 
