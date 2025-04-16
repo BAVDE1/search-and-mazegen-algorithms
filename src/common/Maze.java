@@ -21,7 +21,7 @@ public class Maze {
     public Vec2 pos = new Vec2(520, 220);
     public Vec2 size = new Vec2(400);
 
-    public static final int MIN_GRID_SIZE = 5;
+    public static final int MIN_GRID_SIZE = 7;
     public static final int MAX_GRID_SIZE = 51;
     private int gridSize = 11;
     private int[][] mazeGrid = new int[gridSize][gridSize];

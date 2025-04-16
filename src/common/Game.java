@@ -392,7 +392,7 @@ public class Game extends GameBase {
 
     private void changeMazeRunner(Runner newRunner, Button btn) {
         if (!((ToggleButton) btn).toggled) return;
-        newRunner.complete = mazeRunner.running;
+        resetMaze();
         newRunner.useFPO = mazeRunner.useFPO;  // transfer settings
         newRunner.opPerFrames = mazeRunner.opPerFrames;
         newRunner.framesPerOp = mazeRunner.framesPerOp;
