@@ -36,7 +36,7 @@ float noise(vec2 uv) {
 }
 
 void main() {
-    float n1 = noise((gl_FragCoord.xy + vec2(-time, cos(time)) * 10) * (.01 * scale));
+    float n1 = noise((gl_FragCoord.xy + vec2(-time, cos(time)) * 20) * (.01 * scale));
     float n2 = noise((gl_FragCoord.xy + sin(time)) * (.02 * scale));
     float n = (n1 + n2) * .5;
     float mix1 = mix(.4, .5, smoothstep(.3, .4, n));

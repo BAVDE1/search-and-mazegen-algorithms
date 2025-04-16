@@ -69,6 +69,7 @@ public abstract class Runner {
     public void finish() {
         if (complete) return;
         complete = true;
+        running = false;
     }
 
     public void finishMaze() {

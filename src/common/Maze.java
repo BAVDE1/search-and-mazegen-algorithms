@@ -33,7 +33,7 @@ public class Maze {
     private final VertexBuffer vbBg = new VertexBuffer();
     private final VertexBuffer vbTiles = new VertexBuffer();
     private final BufferBuilder2f sbBg = new BufferBuilder2f(true);
-    private final BufferBuilder2f sbTiles = new BufferBuilder2f(true);
+    public final BufferBuilder2f sbTiles = new BufferBuilder2f(true);
     public boolean hasChanged = true;
 
     public float wobbleFrequency = 1;

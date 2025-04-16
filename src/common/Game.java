@@ -53,6 +53,7 @@ public class Game extends GameBase {
     Button startBtn;
     Button genMazeAction;
     TextRenderer.TextObject selectedAlgorithms;
+    TextRenderer.TextObject algorithmDetails;
 
     boolean useFPO = true;
     Runner mazeRunner;
@@ -82,14 +83,6 @@ public class Game extends GameBase {
 
         bindEvents();
         setupBuffers();
-    }
-
-    @Override
-    public void mainLoop(double dt) {
-        GLFW.glfwPollEvents();
-        mazeRunner.nextFrame();
-        searchRunner.nextFrame();
-        render();
     }
 
     @Override
@@ -165,7 +158,9 @@ public class Game extends GameBase {
         at.setTextColour(Color.YELLOW);
         selectedAlgorithms = new TextRenderer.TextObject(2, "", new Vec2(20, Constants.SCREEN_SIZE.height - 60));
         selectedAlgorithms.setTextColour(Color.YELLOW);
-        textRenderer.pushTextObject(at, selectedAlgorithms);
+        algorithmDetails = new TextRenderer.TextObject(2, "", new Vec2(265, 180));
+        algorithmDetails.setTextColour(new Color(1, 1, 1, .75f));
+        textRenderer.pushTextObject(at, selectedAlgorithms, algorithmDetails);
 
         // buttons
         navActionButtons.setupBufferObjects();
@@ -309,14 +304,61 @@ public class Game extends GameBase {
         separatorVb.bufferSetData(separatorSb);
     }
 
-    public void render() {
-        Renderer.clearScreen();
-
+    private void updateAlgorithmDetails() {
         selectedAlgorithms.setString(String.format(
                 "search: %s\nmaze: %s",
                 searchAlgorithmButtons.radioBtnSelected.text,
                 mazeGenerationButtons.radioBtnSelected.text
         ));
+
+        algorithmDetails.setString(String.format(
+                """
+                        maze size: %s
+                        maze wobble: %s
+                        %s: %s
+                        
+                        ========================
+                        
+                        verts: %s (%s)
+                        floats %s / %s
+                        
+                        =======================
+                        
+                        maze: %s
+                        status: %s
+                        operations: %s
+                        frames: %s
+                        frames this op: %s
+                        
+                        ========================
+                        
+                        search: %s
+                        status: %s
+                        operations: %s
+                        frames: %s
+                        frames this op: %s
+                        """,
+                maze.getGridSize(),
+                maze.wobbleFrequency,
+                useFPO ? "frames per op" : "op per frames",
+                useFPO ? mazeRunner.framesPerOp : mazeRunner.opPerFrames,
+                maze.sbTiles.getVertexCount(), maze.sbTiles.getSeparationsCount(),
+                maze.sbTiles.getFloatCount(), maze.sbTiles.getBufferSize(),
+                mazeGenerationButtons.radioBtnSelected.text,
+                mazeRunner.paused ? "paused" : (mazeRunner.running ? "running" : (mazeRunner.complete ? "completed" : "---")),
+                mazeRunner.opNum,
+                mazeRunner.frameNum,
+                mazeRunner.opFrameNum,
+                searchAlgorithmButtons.radioBtnSelected.text,
+                searchRunner.paused ? "paused" : (searchRunner.running ? "running" : (searchRunner.complete ? "completed" : "---")),
+                searchRunner.opNum,
+                searchRunner.frameNum,
+                searchRunner.opFrameNum
+        ));
+    }
+
+    public void render() {
+        Renderer.clearScreen();
 
         maze.render();
         textRenderer.draw();
@@ -339,6 +381,15 @@ public class Game extends GameBase {
         Renderer.finish(window);
     }
 
+    @Override
+    public void mainLoop(double dt) {
+        GLFW.glfwPollEvents();
+        mazeRunner.nextFrame();
+        searchRunner.nextFrame();
+        updateAlgorithmDetails();
+        render();
+    }
+
     private void changeMazeRunner(Runner newRunner, Button btn) {
         if (!((ToggleButton) btn).toggled) return;
         newRunner.complete = mazeRunner.running;
@@ -349,8 +400,10 @@ public class Game extends GameBase {
     }
 
     private void updateRunnerStatus(Runner runner, Button btn) {
-        if (runner.complete) return;
-        if (!runner.running) {
+        if (runner.complete) {
+            if (btn == genMazeAction) resetMaze();
+            runner.start();
+        } else if (!runner.running) {
             btn.text = "pause";
             runner.start();
         } else if (!runner.paused) {
