@@ -2,6 +2,7 @@ package common;
 
 import boilerplate.utility.Vec2;
 
+import java.util.ArrayList;
 import java.util.Stack;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -9,6 +10,7 @@ public abstract class Runner {
     public static class Cell {
         public Vec2 pos;
         public Vec2 inBetweenCell;
+        public int direction;
 
         public Cell() {}
         public Cell(Vec2 pos) {
@@ -41,6 +43,7 @@ public abstract class Runner {
     public ThreadLocalRandom random = ThreadLocalRandom.current();
 
     public Stack<Cell> stack = new Stack<>();
+    public ArrayList<Cell> array = new ArrayList<>();
 
     public Runner(Maze maze, Game game) {
         this.maze = maze;
@@ -67,6 +70,12 @@ public abstract class Runner {
         complete = true;
     }
 
+    public void finishMaze() {
+        finish();
+        maze.placeStartEndPoints();
+        game.mazeGenerationCompleted();
+    }
+
     public void reset() {
         opNum = 0;
         frameNum = 0;
@@ -89,7 +98,7 @@ public abstract class Runner {
         }
 
         // frames between operations
-        if (useFPO && opFrameNum == framesPerOp) performOperation();
+        if (useFPO && opFrameNum >= framesPerOp) performOperation();
 
         // multiple operations per frame
         if (!useFPO) {

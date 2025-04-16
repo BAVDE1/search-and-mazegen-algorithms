@@ -13,13 +13,6 @@ public class MazeDepthFirst extends Runner {
     }
 
     @Override
-    public void finish() {
-        super.finish();
-        maze.placeStartEndPoints();
-        game.mazeGenerationCompleted();
-    }
-
-    @Override
     public void start() {
         if (running) return;
         super.start();
@@ -33,7 +26,7 @@ public class MazeDepthFirst extends Runner {
         super.performOperation();
 
         if (stack.empty()) {
-            finish();
+            finishMaze();
             return;
         }
 

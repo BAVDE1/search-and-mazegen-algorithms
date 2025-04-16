@@ -10,6 +10,7 @@ import boilerplate.rendering.text.FontManager;
 import boilerplate.rendering.text.TextRenderer;
 import boilerplate.utility.Vec2;
 import mazeGen.MazeDepthFirst;
+import mazeGen.MazeKruskal;
 import org.lwjgl.glfw.GLFW;
 import searching.SearchDepthFirst;
 
@@ -85,6 +86,7 @@ public class Game extends GameBase {
     public void mainLoop(double dt) {
         GLFW.glfwPollEvents();
         mazeRunner.nextFrame();
+        searchRunner.nextFrame();
         render();
     }
 
@@ -102,15 +104,17 @@ public class Game extends GameBase {
         GLFW.glfwSetKeyCallback(this.window.handle, (window, key, scancode, action, mods) -> {
             if (action == 0) {
                 if (key >= 0 && key < heldKeys.length) heldKeys[key] = 0;
-
-                switch (key) {
-                    case GLFW_KEY_ESCAPE -> glfwSetWindowShouldClose(window, true);
-                    case GLFW_KEY_O -> updateRunner(mazeRunner, genMazeAction);
-                    case GLFW_KEY_P -> resetMaze();
-                }
             }
             if (action == 1) {
                 if (key >= 0 && key < heldKeys.length) heldKeys[key] = 1;
+
+                switch (key) {
+                    case GLFW_KEY_ESCAPE -> glfwSetWindowShouldClose(window, true);
+                    case GLFW_KEY_T -> mazeRunner.nextFrame();
+                    case GLFW_KEY_O -> updateRunnerStatus(mazeRunner, genMazeAction);
+                    case GLFW_KEY_P -> resetMaze();
+                }
+
                 mazeInputs.keyPressed(key, scancode);
                 framesInputs.keyPressed(key, scancode);
             }
@@ -197,8 +201,8 @@ public class Game extends GameBase {
         genMazeAction = new Button(new Vec2(720, 35), new Vec2(160, 50), "generate maze", Color.MAGENTA);
         Button clearMaze = new Button(new Vec2(720, 100), new Vec2(160, 30), "clear maze", Color.GRAY);
         clearSearch.textScale = clearMaze.textScale = .9f;
-        startBtn.addCallback((Button btn) -> updateRunner(searchRunner, btn));
-        genMazeAction.addCallback((Button btn) -> updateRunner(mazeRunner, btn));
+        startBtn.addCallback((Button btn) -> updateRunnerStatus(searchRunner, btn));
+        genMazeAction.addCallback((Button btn) -> updateRunnerStatus(mazeRunner, btn));
         clearMaze.addCallback((Button btn) -> resetMaze());
         actionButtons.addButton(startBtn, clearSearch, genMazeAction, clearMaze);
 
@@ -217,12 +221,15 @@ public class Game extends GameBase {
         mazeGenerationButtons.setupBufferObjects();
         mazeGenerationButtons.radioToggles = true;
         ToggleButton rdf = new ToggleButton(new Vec2(25, 230), new Vec2(200, 40), "rand depth first", Color.YELLOW);
+        rdf.addCallback((Button btn) -> changeMazeRunner(new MazeDepthFirst(maze, this), btn));
         ToggleButton rk = new ToggleButton(new Vec2(25, 290), new Vec2(200, 40), "rand kruskal", Color.YELLOW);
+        rk.addCallback((Button btn) -> changeMazeRunner(new MazeKruskal(maze, this), btn));
         ToggleButton rp = new ToggleButton(new Vec2(25, 350), new Vec2(200, 40), "rand prim", Color.YELLOW);
         ToggleButton w = new ToggleButton(new Vec2(25, 410), new Vec2(200, 40), "wilson", Color.YELLOW);
         ToggleButton ft = new ToggleButton(new Vec2(25, 470), new Vec2(200, 40), "fractal tesselation", Color.YELLOW);
         mazeGenerationButtons.addButton(rdf, rk, rp, w, ft);
         mazeGenerationButtons.toggleBtn(rdf, true);
+        mazeRunner.complete = false;  // reset
 
         searchAlgorithmButtons.setupBufferObjects();
         searchAlgorithmButtons.radioToggles = true;
@@ -330,7 +337,16 @@ public class Game extends GameBase {
         Renderer.finish(window);
     }
 
-    private void updateRunner(Runner runner, Button btn) {
+    private void changeMazeRunner(Runner newRunner, Button btn) {
+        if (!((ToggleButton) btn).toggled) return;
+        newRunner.complete = true;
+        newRunner.useFPO = mazeRunner.useFPO;  // transfer settings
+        newRunner.opPerFrames = mazeRunner.opPerFrames;
+        newRunner.framesPerOp = mazeRunner.framesPerOp;
+        mazeRunner = newRunner;
+    }
+
+    private void updateRunnerStatus(Runner runner, Button btn) {
         if (runner.complete) return;
         if (!runner.running) {
             btn.text = "pause";
