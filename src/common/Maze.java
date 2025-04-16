@@ -3,12 +3,14 @@ package common;
 import boilerplate.rendering.*;
 import boilerplate.utility.Vec2;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.opengl.GL11.*;
 
 public class Maze {
+    public static final int OUT_OF_BOUNDS = -1;
     public static final int WALL = 0;
     public static final int EMPTY = 1;
     public static final int VISITED = 2;
@@ -20,8 +22,8 @@ public class Maze {
     public Vec2 size = new Vec2(400);
 
     public static final int MIN_GRID_SIZE = 5;
-    public static final int MAX_GRID_SIZE = 50;
-    private int gridSize = 10;
+    public static final int MAX_GRID_SIZE = 51;
+    private int gridSize = 11;
     private int[][] mazeGrid = new int[gridSize][gridSize];
 
     private final ShaderHelper shBg = new ShaderHelper();
@@ -72,9 +74,12 @@ public class Maze {
 
     public void clearMaze() {
         mazeGrid = new int[gridSize][gridSize];
+        hasChanged = true;
+    }
+
+    public void placeStartEndPoints() {
         set(new Vec2(0, gridSize-1), START);
         set(new Vec2(gridSize-1, 0), END);
-        hasChanged = true;
     }
 
     public boolean hasVisited(Vec2 pos) {
@@ -108,15 +113,36 @@ public class Maze {
         return get((int) pos.x, (int) pos.y);
     }
     public int get(int x, int y) {
-        if (isOutOfBounds(x, y)) return WALL;
+        if (isOutOfBounds(x, y)) return OUT_OF_BOUNDS;
         return mazeGrid[y][x];
+    }
+
+    public ArrayList<Vec2> getWallNeighbours(Vec2 pos, int step) {
+        return getWallNeighbours((int) pos.x, (int) pos.y, step);
+    }
+    public ArrayList<Vec2> getWallNeighbours(int x, int y, int step) {
+        ArrayList<Vec2> l = new ArrayList<>(4);
+        for (Vec2 off : List.of(new Vec2(0, step), new Vec2(step, 0), new Vec2(0, -step), new Vec2(-step, 0))) {
+            Vec2 neighbourPos = off.add(x, y);
+            if (get(neighbourPos) == WALL) l.add(neighbourPos);
+        }
+        return l;
+    }
+
+    public Vec2 getCellInBetween(Vec2 p1, Vec2 p2) {
+        int xDiff = (int) (p2.x - p1.x);
+        int yDiff = (int) (p2.y - p1.y);
+
+        if (Math.abs(xDiff) > 1) return p1.add(xDiff * .5f, 0);
+        if (Math.abs(yDiff) > 1) return p1.add(0, yDiff * .5f);
+        return null;
     }
 
     public boolean isOutOfBounds(Vec2 pos) {
         return isOutOfBounds((int) pos.x, (int) pos.y);
     }
     public boolean isOutOfBounds(int x, int y) {
-        return y == -1 || x == -1 || y > gridSize-1 || x > gridSize-1;
+        return y < 0 || x < 0 || y > gridSize-1 || x > gridSize-1;
     }
 
     public int getGridSize() {
@@ -124,7 +150,7 @@ public class Maze {
     }
 
     private float percentSize(int size) {
-        return ((float) size + 25) / MAX_GRID_SIZE;
+        return ((float) size + MAX_GRID_SIZE * .5f) / MAX_GRID_SIZE;
     }
 
     private void updateScaleUniforms() {

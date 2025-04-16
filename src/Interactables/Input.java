@@ -30,6 +30,8 @@ public class Input {
     public String value = "";
     public float valueScale = 1;
     public int maxChars = 10;
+    public boolean evenOnly = false;
+    public boolean oddOnly = false;
 
     public boolean mouseHovering = false;
     public boolean wobbling = false;
@@ -87,6 +89,8 @@ public class Input {
         // clamp
         if (intValuesOnly && !value.isEmpty()) {
             int intVal = Integer.parseInt(value);
+            if (evenOnly) intVal -= intVal % 2;
+            if (oddOnly) intVal -= 1- (intVal % 2);
             if (rangeMin != null) intVal = Math.max(rangeMin, intVal);
             if (rangeMax != null) intVal = Math.min(rangeMax, intVal);
             value = String.valueOf(intVal);

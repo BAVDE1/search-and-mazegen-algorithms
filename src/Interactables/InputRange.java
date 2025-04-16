@@ -61,6 +61,8 @@ public class InputRange extends Input {
     public void updateValueFromMousePos(Vec2 mousePos) {
         float percent = (mousePos.x - barPos.x - barMargin.x) / barRangeWidth;
         int newValInt = clampValue((int) (rangeMin + ((rangeMax - rangeMin) * percent)));
+        if (evenOnly) newValInt -= newValInt % 2;
+        if (oddOnly) newValInt -= 1- (newValInt % 2);
         String newVal = String.valueOf(newValInt);
         if (!newVal.equals(value)) {
             value = newVal;
