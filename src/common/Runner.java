@@ -90,7 +90,10 @@ public abstract class Runner {
     }
 
     public void nextFrame() {
-        if (complete || !running || paused) return;
+        nextFrame(false);
+    }
+    public void nextFrame(boolean overridePause) {
+        if (complete || !running || (!overridePause && paused)) return;
         frameNum++;
         opFrameNum++;
 

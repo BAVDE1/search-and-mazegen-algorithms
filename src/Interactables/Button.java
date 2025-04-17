@@ -22,6 +22,7 @@ public class Button {
     public float textScale = 1;
     public Color color = Color.white;
     public FontManager.LoadedFont font = FontManager.getLoadedFont(3);
+    public boolean disabled = false;
 
     public boolean mouseHovering = false;
     public boolean wobbling = false;
@@ -40,6 +41,7 @@ public class Button {
     }
 
     public void setMouseHovering(boolean val) {
+        if (disabled) return;
         mouseHovering = val;
         wobbling = val;
     }
@@ -53,14 +55,17 @@ public class Button {
     }
 
     public void click() {
+        if (disabled) return;
         fireCallbacks();
     }
 
     public void fireCallbacks() {
+        if (disabled) return;
         for (ButtonCallback callback : callbacks) callback.call(this);
     }
 
     public boolean isPointInBounds(Vec2 point) {
+        if (disabled) return false;
         return pos.x < point.x && point.x < pos.x + size.x &&
                 pos.y < point.y && point.y < pos.y + size.y;
     }
@@ -69,9 +74,15 @@ public class Button {
         return 1;
     }
 
+    float getAlpha() {
+        return disabled ? 255 * .5f : color.getAlpha();
+    }
+
     public void appendToBufferBuilder(BufferBuilder2f sb) {
+        float alpha = getAlpha();
+
         // outline
-        float[] outlineFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0, 0};
+        float[] outlineFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), alpha, 0, 0};
         Shape2d.Poly outlinePoly = Shape2d.createRectOutline(pos, size, 3, new ShapeMode.Append(outlineFloats));
         sb.pushSeparatedPolygon(outlinePoly);
 
@@ -80,14 +91,14 @@ public class Button {
             int textHeight = (int) (font.getLineHeight() * textScale);
             float textWidth = font.findLineWidth(text) * textScale;
 
-            float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 0, 0};
+            float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), alpha, 0, 0};
             Vec2 midOffset = size.mul(.5f).sub(new Vec2(textWidth, textHeight).mul(.5f));
             TextRenderer.pushTextToBuilder(sb, text, font, pos.add(midOffset), textFloats, textScale);
         }
 
         // hovering wobble
         if (wobbling) {
-            float[] wobbleFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), getWobbleSpeed()};
+            float[] wobbleFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), alpha, getWobbleSpeed()};
             java.util.List<float[]> wobbleIndexes = List.of(new float[]{0}, new float[]{1}, new float[]{2}, new float[]{3});
             Shape2d.Poly poly = Shape2d.createRect(pos, size, new ShapeMode.AppendUnpack(wobbleFloats, wobbleIndexes));
             sb.pushSeparatedPolygon(poly);

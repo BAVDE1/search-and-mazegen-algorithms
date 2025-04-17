@@ -16,11 +16,12 @@ public class ToggleButton extends Button {
     }
 
     public void toggle() {
+        if (disabled) return;
         toggle(!toggled);
     }
 
     public void toggle(boolean val) {
-        if (val == toggled) return;
+        if (val == toggled || disabled) return;
         toggled = val;
         if (!mouseHovering) wobbling = val;
         fireCallbacks();
@@ -33,12 +34,14 @@ public class ToggleButton extends Button {
 
     @Override
     public void setMouseHovering(boolean val) {
+        if (disabled) return;
         mouseHovering = val;
         if (val || !toggled) wobbling = val;
     }
 
     @Override
     public void click() {
+        if (disabled) return;
         toggle();
         fireCallbacks();
     }

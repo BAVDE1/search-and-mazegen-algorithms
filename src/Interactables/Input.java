@@ -32,6 +32,7 @@ public class Input {
     public int maxChars = 10;
     public boolean evenOnly = false;
     public boolean oddOnly = false;
+    public boolean roundToPow2 = false;
 
     public boolean mouseHovering = false;
     public boolean wobbling = false;
@@ -89,8 +90,7 @@ public class Input {
         // clamp
         if (intValuesOnly && !value.isEmpty()) {
             int intVal = Integer.parseInt(value);
-            if (evenOnly) intVal -= intVal % 2;
-            if (oddOnly) intVal -= 1- (intVal % 2);
+            intVal = validateIntValue(intVal);
             if (rangeMin != null) intVal = Math.max(rangeMin, intVal);
             if (rangeMax != null) intVal = Math.min(rangeMax, intVal);
             value = String.valueOf(intVal);
@@ -98,6 +98,29 @@ public class Input {
 
         setMouseHovering(mouseHovering);  // update this!
         fireCallbacks();
+    }
+
+    public void revalidateValue() {
+        if (disabled) return;
+        int intVal = Integer.parseInt(value);
+        intVal = validateIntValue(intVal);
+        value = String.valueOf(intVal);
+        group.hasChanged = true;
+        fireCallbacks();
+    }
+
+    public int validateIntValue(int val) {
+        if (roundToPow2) {
+            int base = 1;
+            while (base < val && base < rangeMax) {
+                if (val - base < Math.floor(base / 2f) && base > rangeMin) break;
+                base *= 2;
+            }
+            val = base;
+        }
+        if (evenOnly) val -= val % 2;
+        if (oddOnly) val -= 1- (val % 2);  // IMPORTANT: after round to pow 2
+        return val;
     }
 
     public void select() {
@@ -140,6 +163,7 @@ public class Input {
     }
 
     public boolean isPointInInputArea(Vec2 point) {
+        if (disabled) return false;
         return areaPos.x - areaMargin.x < point.x && point.x < areaPos.x + areaSize.x + areaMargin.x &&
                 areaPos.y < point.y && point.y < areaPos.y + areaSize.y;
     }
@@ -149,6 +173,7 @@ public class Input {
     }
 
     public void appendToBufferBuilder(BufferBuilder2f sb) {
+        float alpha = getAlpha();
 
         // title
         int titleHeight = 0;
@@ -156,7 +181,7 @@ public class Input {
             titleHeight = (int) (font.getLineHeight() * titleScale);
             float titleWidth = font.findLineWidth(title) * titleScale;
 
-            float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), getAlpha(), 0, 0};
+            float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), alpha, 0, 0};
             Vec2 linePos = pos.sub(titleWidth * .5f, 0);
             TextRenderer.pushTextToBuilder(sb, title, font, linePos, textFloats, titleScale);
         }
@@ -169,19 +194,19 @@ public class Input {
 
         // value
         if (!value.isEmpty()) {
-            float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), getAlpha(), 0, 0};
+            float[] textFloats = new float[]{color.getRed(), color.getGreen(), color.getBlue(), alpha, 0, 0};
             Vec2 midOffset = areaSize.mul(.5f).sub(new Vec2(valueWidth, valueHeight).mul(.5f));
             TextRenderer.pushTextToBuilder(sb, value, font, areaPos.add(midOffset), textFloats, valueScale);
         }
 
         // value outline
-        float[] outlineFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), getAlpha(), 0, 0};
+        float[] outlineFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), alpha, 0, 0};
         Shape2d.Poly outlinePoly = Shape2d.createRectOutline(areaPos, areaSize, 3, new ShapeMode.Append(outlineFloats));
         sb.pushSeparatedPolygon(outlinePoly);
 
         // hovering wobble
         if (wobbling) {
-            float[] wobbleFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), getAlpha(), selected ? .4f:1};
+            float[] wobbleFloats = new float[]{-1, -1, color.getRed(), color.getGreen(), color.getBlue(), alpha, selected ? .4f:1};
             List<float[]> wobbleIndexes = List.of(new float[]{0}, new float[]{1}, new float[]{2}, new float[]{3});
             Shape2d.Poly poly = Shape2d.createRect(areaPos, areaSize, new ShapeMode.AppendUnpack(wobbleFloats, wobbleIndexes));
             sb.pushSeparatedPolygon(poly);

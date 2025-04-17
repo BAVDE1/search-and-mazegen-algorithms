@@ -20,9 +20,10 @@ public class Maze {
 
     public Vec2 pos = new Vec2(520, 220);
     public Vec2 size = new Vec2(400);
+    public boolean searchable = false;
 
-    public static final int MIN_GRID_SIZE = 7;
-    public static final int MAX_GRID_SIZE = 51;
+    public static final int MIN_GRID_SIZE = 5;
+    public static final int MAX_GRID_SIZE = 65;
     private int gridSize = 11;
     private int[][] mazeGrid = new int[gridSize][gridSize];
 
@@ -75,11 +76,13 @@ public class Maze {
     public void clearMaze() {
         mazeGrid = new int[gridSize][gridSize];
         hasChanged = true;
+        searchable = false;
     }
 
     public void placeStartEndPoints() {
         set(new Vec2(0, gridSize-1), START);
         set(new Vec2(gridSize-1, 0), END);
+        searchable = true;
     }
 
     public boolean hasVisited(Vec2 pos) {

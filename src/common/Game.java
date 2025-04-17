@@ -9,10 +9,7 @@ import boilerplate.rendering.*;
 import boilerplate.rendering.text.FontManager;
 import boilerplate.rendering.text.TextRenderer;
 import boilerplate.utility.Vec2;
-import mazeGen.MazeDepthFirst;
-import mazeGen.MazeKruskal;
-import mazeGen.MazePrim;
-import mazeGen.MazeWilson;
+import mazeGen.*;
 import org.lwjgl.glfw.GLFW;
 import searching.SearchDepthFirst;
 
@@ -52,6 +49,7 @@ public class Game extends GameBase {
 
     Button startBtn;
     Button genMazeAction;
+    InputRange mazeSizeInput;
     TextRenderer.TextObject selectedAlgorithms;
     TextRenderer.TextObject algorithmDetails;
 
@@ -105,7 +103,7 @@ public class Game extends GameBase {
 
                 switch (key) {
                     case GLFW_KEY_ESCAPE -> glfwSetWindowShouldClose(window, true);
-                    case GLFW_KEY_T -> mazeRunner.nextFrame();
+                    case GLFW_KEY_T -> mazeRunner.nextFrame(true);
                     case GLFW_KEY_O -> updateRunnerStatus(mazeRunner, genMazeAction);
                     case GLFW_KEY_P -> resetMaze();
                 }
@@ -198,9 +196,13 @@ public class Game extends GameBase {
         genMazeAction = new Button(new Vec2(720, 35), new Vec2(160, 50), "generate maze", Color.MAGENTA);
         Button clearMaze = new Button(new Vec2(720, 100), new Vec2(160, 30), "clear maze", Color.GRAY);
         clearSearch.textScale = clearMaze.textScale = .9f;
-        startBtn.addCallback((Button btn) -> updateRunnerStatus(searchRunner, btn));
+        startBtn.addCallback((Button btn) -> {
+            if (!maze.searchable) return;
+            updateRunnerStatus(searchRunner, btn);
+        });
         genMazeAction.addCallback((Button btn) -> updateRunnerStatus(mazeRunner, btn));
         clearMaze.addCallback((Button btn) -> resetMaze());
+        clearSearch.addCallback((Button btn) -> resetSearch());
         actionButtons.addButton(startBtn, clearSearch, genMazeAction, clearMaze);
 
         navAlgorithmButtons.setupBufferObjects();
@@ -224,31 +226,37 @@ public class Game extends GameBase {
         ToggleButton rp = new ToggleButton(new Vec2(25, 350), new Vec2(200, 40), "rand prim", Color.YELLOW);
         rp.addCallback((Button btn) -> changeMazeRunner(new MazePrim(maze, this), btn));
         ToggleButton w = new ToggleButton(new Vec2(25, 410), new Vec2(200, 40), "wilson", Color.YELLOW);
+        w.disabled = true;
         ToggleButton ft = new ToggleButton(new Vec2(25, 470), new Vec2(200, 40), "fractal tesselation", Color.YELLOW);
+        ft.addCallback((Button btn) -> changeMazeRunner(new MazeFractal(maze, this), btn));
         mazeGenerationButtons.addButton(rdf, rk, rp, w, ft);
         mazeGenerationButtons.toggleBtn(rdf, true);
 
         searchAlgorithmButtons.setupBufferObjects();
         searchAlgorithmButtons.radioToggles = true;
         ToggleButton df = new ToggleButton(new Vec2(25, 230), new Vec2(200, 40), "depth first", Color.YELLOW);
+        df.disabled = true;
         ToggleButton bf = new ToggleButton(new Vec2(25, 290), new Vec2(200, 40), "breadth first", Color.YELLOW);
+        bf.disabled = true;
         ToggleButton gbf = new ToggleButton(new Vec2(25, 350), new Vec2(200, 40), "greedy best first", Color.YELLOW);
+        gbf.disabled = true;
         ToggleButton as = new ToggleButton(new Vec2(25, 410), new Vec2(200, 40), "a star", Color.YELLOW);
+        as.disabled = true;
         searchAlgorithmButtons.addButton(df, bf, as, gbf);
         searchAlgorithmButtons.toggleBtn(df, true);
 
         // inputs
         mazeInputs.setupBufferObjects();
-        InputRange mazeSize = new InputRange(new Vec2(720, 20), "maze size", maze.getGridSize(), Maze.MIN_GRID_SIZE, Maze.MAX_GRID_SIZE, Color.YELLOW);
-        mazeSize.barRangeWidth = 140;
-        mazeSize.oddOnly = true;
+        mazeSizeInput = new InputRange(new Vec2(720, 20), "maze size", maze.getGridSize(), Maze.MIN_GRID_SIZE, Maze.MAX_GRID_SIZE, Color.YELLOW);
+        mazeSizeInput.barRangeWidth = 140;
+        mazeSizeInput.oddOnly = true;
         InputRange mazeWobble = new InputRange(new Vec2(900, 20), "wobble", (int) maze.wobbleFrequency, 0, 15, Color.YELLOW);
-        mazeSize.addCallback((Input input, String val) -> {
+        mazeSizeInput.addCallback((Input input, String val) -> {
             maze.setGridSize(Integer.parseInt(val));
             resetMaze();
         });
         mazeWobble.addCallback((Input input, String val) -> maze.setWobbleFrequency(Float.parseFloat(val)));
-        mazeInputs.addInput(mazeSize, mazeWobble);
+        mazeInputs.addInput(mazeSizeInput, mazeWobble);
         mazeInputs.setVisible(false);
 
         framesInputs.setupBufferObjects();
@@ -322,7 +330,7 @@ public class Game extends GameBase {
                         verts: %s (%s)
                         floats %s / %s
                         
-                        =======================
+                        ========================
                         
                         maze: %s
                         status: %s
@@ -393,6 +401,10 @@ public class Game extends GameBase {
     private void changeMazeRunner(Runner newRunner, Button btn) {
         if (!((ToggleButton) btn).toggled) return;
         resetMaze();
+        if (mazeSizeInput != null) {
+            mazeSizeInput.roundToPow2 = newRunner instanceof MazeFractal;
+            mazeSizeInput.revalidateValue();
+        }
         newRunner.useFPO = mazeRunner.useFPO;  // transfer settings
         newRunner.opPerFrames = mazeRunner.opPerFrames;
         newRunner.framesPerOp = mazeRunner.framesPerOp;
@@ -421,6 +433,12 @@ public class Game extends GameBase {
         actionButtons.hasChanged = true;
         mazeRunner.reset();
         maze.clearMaze();
+    }
+
+    private void resetSearch() {
+        genMazeAction.text = "start search";
+        actionButtons.hasChanged = true;
+        searchRunner.reset();
     }
 
     public void mazeGenerationCompleted() {

@@ -1,5 +1,6 @@
 package mazeGen;
 
+import boilerplate.utility.Vec2;
 import common.Game;
 import common.Maze;
 import common.Runner;
@@ -17,22 +18,34 @@ public class MazeWilson extends Runner {
     @Override
     public void start() {
         super.start();
-        maze.set(generateRandomCell().pos, Maze.EMPTY);  // initial cell
+        Cell initial = generateRandomCell();
+        maze.set(initial.pos, Maze.EMPTY);
+        do {
+            walkStart = generateRandomCell();
+        } while (initial.pos.equals(walkStart.pos));  // cant be the same!
     }
 
     @Override
     public void performOperation() {
         super.performOperation();
 
-        // start a new walk
-        if (walkStart == null) {
-            walkStart = chooseRandomWall();
+        // do random walk
+        if (walkStart != null) {
+            return;
         }
 
-        // do random walk
+        // start a walk
+        walkStart = chooseNextWall();
+        if (walkStart == null) finishMaze();
     }
 
-    private Cell chooseRandomWall() {
-        return generateRandomCell();
+    private Cell chooseNextWall() {
+        for (int y = 0; y < maze.getGridSize(); y += 2) {
+            for (int x = 0; x < maze.getGridSize(); x += 2) {
+                if (maze.get(x, y) != Maze.WALL) continue;
+                return new Cell(new Vec2(x, y));
+            }
+        }
+        return null;
     }
 }
