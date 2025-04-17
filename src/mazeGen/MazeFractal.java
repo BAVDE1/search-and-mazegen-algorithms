@@ -30,7 +30,6 @@ public class MazeFractal extends Runner {
         onCopy = 1;
         onX = 0;
         onY = 0;
-        array.clear();
     }
 
     @Override

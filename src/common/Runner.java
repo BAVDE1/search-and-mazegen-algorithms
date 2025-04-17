@@ -87,6 +87,8 @@ public abstract class Runner {
         paused = false;
         complete = false;
         stack.clear();
+        array.clear();
+        arrayOther.clear();
     }
 
     public void nextFrame() {
