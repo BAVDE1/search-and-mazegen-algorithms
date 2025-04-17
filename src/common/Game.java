@@ -104,7 +104,7 @@ public class Game extends GameBase {
                 switch (key) {
                     case GLFW_KEY_ESCAPE -> glfwSetWindowShouldClose(window, true);
                     case GLFW_KEY_T -> mazeRunner.nextFrame(true);
-                    case GLFW_KEY_O -> updateRunnerStatus(mazeRunner, genMazeAction);
+                    case GLFW_KEY_O -> updateRunnerStatus(mazeRunner, genMazeAction, "o");
                     case GLFW_KEY_P -> resetMaze();
                 }
 
@@ -191,16 +191,16 @@ public class Game extends GameBase {
         navActionButtons.toggleBtn(actionPage, true);
 
         actionButtons.setupBufferObjects();
-        startBtn = new Button(new Vec2(480, 35), new Vec2(160, 50), "start search", Color.GREEN);
-        Button clearSearch = new Button(new Vec2(480, 100), new Vec2(160, 30), "clear search", Color.GRAY);
-        genMazeAction = new Button(new Vec2(720, 35), new Vec2(160, 50), "generate maze", Color.MAGENTA);
-        Button clearMaze = new Button(new Vec2(720, 100), new Vec2(160, 30), "clear maze", Color.GRAY);
+        startBtn = new Button(new Vec2(480, 35), new Vec2(180, 50), "start search", Color.GREEN);
+        Button clearSearch = new Button(new Vec2(480, 100), new Vec2(180, 30), "clear search [L]", Color.GRAY);
+        genMazeAction = new Button(new Vec2(720, 35), new Vec2(180, 50), "generate maze", Color.MAGENTA);
+        Button clearMaze = new Button(new Vec2(720, 100), new Vec2(180, 30), "clear maze [p]", Color.GRAY);
         clearSearch.textScale = clearMaze.textScale = .9f;
         startBtn.addCallback((Button btn) -> {
             if (!maze.searchable) return;
-            updateRunnerStatus(searchRunner, btn);
+            updateRunnerStatus(searchRunner, btn, "k");
         });
-        genMazeAction.addCallback((Button btn) -> updateRunnerStatus(mazeRunner, btn));
+        genMazeAction.addCallback((Button btn) -> updateRunnerStatus(mazeRunner, btn, "o"));
         clearMaze.addCallback((Button btn) -> resetMaze());
         clearSearch.addCallback((Button btn) -> resetSearch());
         actionButtons.addButton(startBtn, clearSearch, genMazeAction, clearMaze);
@@ -227,9 +227,11 @@ public class Game extends GameBase {
         rp.addCallback((Button btn) -> changeMazeRunner(new MazePrim(maze, this), btn));
         ToggleButton w = new ToggleButton(new Vec2(25, 410), new Vec2(200, 40), "wilson", Color.YELLOW);
         w.disabled = true;
-        ToggleButton ft = new ToggleButton(new Vec2(25, 470), new Vec2(200, 40), "fractal tesselation", Color.YELLOW);
+        ToggleButton rd = new ToggleButton(new Vec2(25, 470), new Vec2(200, 40), "recursive division", Color.YELLOW);
+        rd.disabled = true;
+        ToggleButton ft = new ToggleButton(new Vec2(25, 530), new Vec2(200, 40), "fractal tesselation", Color.YELLOW);
         ft.addCallback((Button btn) -> changeMazeRunner(new MazeFractal(maze, this), btn));
-        mazeGenerationButtons.addButton(rdf, rk, rp, w, ft);
+        mazeGenerationButtons.addButton(rdf, rk, rp, w, rd, ft);
         mazeGenerationButtons.toggleBtn(rdf, true);
 
         searchAlgorithmButtons.setupBufferObjects();
@@ -411,38 +413,38 @@ public class Game extends GameBase {
         mazeRunner = newRunner;
     }
 
-    private void updateRunnerStatus(Runner runner, Button btn) {
+    private void updateRunnerStatus(Runner runner, Button btn, String shortcut) {
         if (runner.complete) {
             if (btn == genMazeAction) resetMaze();
             runner.start();
         } else if (!runner.running) {
-            btn.text = "pause";
+            btn.text = String.format("pause [%s]", shortcut);
             runner.start();
         } else if (!runner.paused) {
-            btn.text = "resume";
+            btn.text = String.format("resume [%s]", shortcut);
             runner.pause();
         } else {
-            btn.text = "pause";
+            btn.text = String.format("pause [%s]", shortcut);
             runner.resume();
         }
         actionButtons.hasChanged = true;
     }
 
     private void resetMaze() {
-        genMazeAction.text = "generate maze";
+        genMazeAction.text = "generate maze [o]";
         actionButtons.hasChanged = true;
         mazeRunner.reset();
         maze.clearMaze();
     }
 
     private void resetSearch() {
-        genMazeAction.text = "start search";
+        genMazeAction.text = "start search [k]";
         actionButtons.hasChanged = true;
         searchRunner.reset();
     }
 
     public void mazeGenerationCompleted() {
-        genMazeAction.text = "completed";
+        genMazeAction.text = "completed [o]";
         actionButtons.hasChanged = true;
     }
 }

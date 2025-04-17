@@ -4,6 +4,7 @@ import boilerplate.rendering.*;
 import boilerplate.utility.Vec2;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
@@ -18,13 +19,17 @@ public class Maze {
     private static final int START = 4;
     private static final int END = 5;
 
+    public interface WallComparison {
+        boolean compare(int status);
+    }
+
     public Vec2 pos = new Vec2(520, 220);
     public Vec2 size = new Vec2(400);
     public boolean searchable = false;
 
     public static final int MIN_GRID_SIZE = 5;
     public static final int MAX_GRID_SIZE = 65;
-    private int gridSize = 11;
+    private int gridSize = 15;
     private int[][] mazeGrid = new int[gridSize][gridSize];
 
     private final ShaderHelper shBg = new ShaderHelper();
@@ -120,27 +125,32 @@ public class Maze {
         return mazeGrid[y][x];
     }
 
+    public ArrayList<Vec2> getEmptyNeighbors(Vec2 pos, int step) {
+        return getEmptyNeighbors((int) pos.x, (int) pos.y, step);
+    }
+    public ArrayList<Vec2> getEmptyNeighbors(int x, int y, int step) {
+        return getNeighbours(x, y, step, (int status) -> status == EMPTY || status == END);
+    }
+
     public ArrayList<Vec2> getNonWallNeighbors(Vec2 pos, int step) {
         return getNonWallNeighbors((int) pos.x, (int) pos.y, step);
     }
     public ArrayList<Vec2> getNonWallNeighbors(int x, int y, int step) {
-        ArrayList<Vec2> l = new ArrayList<>(4);
-        for (Vec2 off : List.of(new Vec2(0, step), new Vec2(step, 0), new Vec2(0, -step), new Vec2(-step, 0))) {
-            Vec2 neighbourPos = off.add(x, y);
-            int s = get(neighbourPos);
-            if (s != WALL && s != OUT_OF_BOUNDS) l.add(neighbourPos);
-        }
-        return l;
+        return getNeighbours(x, y, step, (int status) -> status != WALL && status != OUT_OF_BOUNDS);
     }
 
     public ArrayList<Vec2> getWallNeighbours(Vec2 pos, int step) {
         return getWallNeighbours((int) pos.x, (int) pos.y, step);
     }
     public ArrayList<Vec2> getWallNeighbours(int x, int y, int step) {
+        return getNeighbours(x, y, step, (int status) -> status == WALL);
+    }
+
+    public ArrayList<Vec2> getNeighbours(int x, int y, int step, WallComparison comparison) {
         ArrayList<Vec2> l = new ArrayList<>(4);
         for (Vec2 off : List.of(new Vec2(0, step), new Vec2(step, 0), new Vec2(0, -step), new Vec2(-step, 0))) {
             Vec2 neighbourPos = off.add(x, y);
-            if (get(neighbourPos) == WALL) l.add(neighbourPos);
+            if (comparison.compare(get(neighbourPos))) l.add(neighbourPos);
         }
         return l;
     }
@@ -181,6 +191,10 @@ public class Maze {
         gridSize = val;
         updateScaleUniforms();
         clearMaze();
+    }
+
+    public void emptyMaze() {
+        // todo: set all visited and focussing cells to empty
     }
 
     public void setWobbleFrequency(float val) {
