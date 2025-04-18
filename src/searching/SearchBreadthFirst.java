@@ -7,8 +7,8 @@ import common.Runner;
 
 import java.util.ArrayList;
 
-public class SearchDepthFirst extends Runner {
-    public SearchDepthFirst(Maze maze, Game game) {
+public class SearchBreadthFirst extends Runner {
+    public SearchBreadthFirst(Maze maze, Game game) {
         super(maze, game);
     }
 
@@ -17,7 +17,7 @@ public class SearchDepthFirst extends Runner {
         super.start();
         Cell start = maze.getStartCell();
         for (Vec2 neighbour : maze.getEmptyNeighbors(start.pos, 1)) {
-            stack.add(new Cell(neighbour));
+            queue.add(new Cell(neighbour));
         }
     }
 
@@ -27,38 +27,34 @@ public class SearchDepthFirst extends Runner {
         super.performOperation();
         visitFocussingCells(array);
 
-        if (stack.empty()) {
+        if (queue.isEmpty()) {
             finishSearch();
             return;
         }
 
-        Cell cell = stack.pop();
+        Cell cell = queue.remove();
         if (maze.get(cell.pos) == Maze.END) {
+            focusOnCellParents(cell);
             finishSearch();
             return;
         }
 
         // set focus on full branch
-        Cell p = cell;
-        while (p != null) {
-            maze.set(p.pos, Maze.FOCUSING);
-            p = p.parent;
-        }
+        maze.set(cell.pos, Maze.FOCUSING);
+        focusOnCellParents(cell);
 
         ArrayList<Vec2> neighbors = maze.getEmptyNeighbors(cell.pos, 1);
         for (Vec2 neighbour : neighbors) {
             Cell c = new Cell(neighbour);
             c.parent = cell;
-            stack.add(c);
+            queue.add(c);
         }
 
-        // end of this branch, stop focussing
-        if (neighbors.isEmpty()) {
-            Cell parentToClear = cell;
-            while (parentToClear != null) {
-                array.add(parentToClear);
-                parentToClear = parentToClear.parent;
-            }
+        // always switching current branch
+        Cell p = cell;
+        while (p != null) {
+            array.add(p);
+            p = p.parent;
         }
     }
 }

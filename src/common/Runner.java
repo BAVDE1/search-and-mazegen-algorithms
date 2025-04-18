@@ -3,6 +3,8 @@ package common;
 import boilerplate.utility.Vec2;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -11,6 +13,8 @@ public abstract class Runner {
         public Vec2 pos;
         public Vec2 inBetweenCell;
         public int direction;
+
+        public Cell parent = null;
 
         public Cell() {}
         public Cell(Vec2 pos) {
@@ -43,6 +47,7 @@ public abstract class Runner {
     public ThreadLocalRandom random = ThreadLocalRandom.current();
 
     public Stack<Cell> stack = new Stack<>();
+    public Queue<Cell> queue = new LinkedList<>();
     public ArrayList<Cell> array = new ArrayList<>();
     public ArrayList<Cell> arrayOther = new ArrayList<>();
 
@@ -66,7 +71,7 @@ public abstract class Runner {
         paused = false;
     }
 
-    public void finish() {
+    private void finish() {
         if (complete) return;
         complete = true;
         running = false;
@@ -78,6 +83,11 @@ public abstract class Runner {
         game.mazeGenerationCompleted();
     }
 
+    public void finishSearch() {
+        finish();
+        game.searchCompleted();
+    }
+
     public void reset() {
         opNum = 0;
         frameNum = 0;
@@ -87,6 +97,7 @@ public abstract class Runner {
         paused = false;
         complete = false;
         stack.clear();
+        queue.clear();
         array.clear();
         arrayOther.clear();
     }
@@ -95,12 +106,17 @@ public abstract class Runner {
         nextFrame(false);
     }
     public void nextFrame(boolean overridePause) {
-        if (complete || !running || (!overridePause && paused)) return;
+        if (!complete && overridePause) {
+            performOperation();
+            return;
+        }
+
+        if (complete || !running || paused) return;
         frameNum++;
         opFrameNum++;
 
         // instant complete
-        if (framesPerOp == 0 || opPerFrames == 0) {
+        if ((useFPO && framesPerOp == 0) || (!useFPO && opPerFrames == 0)) {
             while (!complete) performOperation();
         }
 
@@ -143,6 +159,21 @@ public abstract class Runner {
                 if (c.hasInBetweenCell()) maze.set(c.inBetweenCell, Maze.EMPTY);
             }
             theArray.clear();
+        }
+    }
+
+    public void visitFocussingCells(ArrayList<Cell> theArray) {
+        if (!theArray.isEmpty()) {
+            for (Cell c : theArray) maze.set(c.pos, Maze.VISITED);
+            theArray.clear();
+        }
+    }
+
+    public void focusOnCellParents(Cell cell) {
+        Cell p = cell.parent;
+        while (p != null) {
+            maze.set(p.pos, Maze.FOCUSING);
+            p = p.parent;
         }
     }
 }

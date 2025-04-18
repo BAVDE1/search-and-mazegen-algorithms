@@ -4,7 +4,6 @@ import boilerplate.rendering.*;
 import boilerplate.utility.Vec2;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
@@ -16,13 +15,14 @@ public class Maze {
     public static final int EMPTY = 1;
     public static final int VISITED = 2;
     public static final int FOCUSING = 3;
-    private static final int START = 4;
-    private static final int END = 5;
+    public static final int START = 4;
+    public static final int END = 5;
 
     public interface WallComparison {
         boolean compare(int status);
     }
 
+    private boolean debugRender = false;
     public Vec2 pos = new Vec2(520, 220);
     public Vec2 size = new Vec2(400);
     public boolean searchable = false;
@@ -85,9 +85,17 @@ public class Maze {
     }
 
     public void placeStartEndPoints() {
-        set(new Vec2(0, gridSize-1), START);
-        set(new Vec2(gridSize-1, 0), END);
+        set(getStartCell().pos, START);
+        set(getEndCell().pos, END);
         searchable = true;
+    }
+
+    public Runner.Cell getStartCell() {
+        return new Runner.Cell(new Vec2(0, gridSize-1));
+    }
+
+    public Runner.Cell getEndCell() {
+        return new Runner.Cell(new Vec2(gridSize-1, 0));
     }
 
     public boolean hasVisited(Vec2 pos) {
@@ -193,8 +201,17 @@ public class Maze {
         clearMaze();
     }
 
-    public void emptyMaze() {
-        // todo: set all visited and focussing cells to empty
+    public void emptyVisitedMazeTiles() {
+        for (int y = 0; y < gridSize; y++) {
+            for (int x = 0; x < gridSize; x++) {
+                int s = get(x, y);
+                if (!(s == WALL || s == START || s == END)) set(x, y, EMPTY);
+            }
+        }
+    }
+
+    public void toggleDebugRender() {
+        debugRender = !debugRender;
     }
 
     public void setWobbleFrequency(float val) {
@@ -211,10 +228,16 @@ public class Maze {
                 int status = get(x, y);
                 if (status == WALL) continue;
 
+                List<float[]> wobbleFloats = getWobbleFloats(x, y);
                 Vec2 tilePos = new Vec2(x, y).mul(tileSize).add(pos);
-                Shape2d.Poly poly = Shape2d.createRect(tilePos, tileSize, new ShapeMode.AppendUnpack(new float[] {status}, getWobbleFloats(x, y)));
+                Shape2d.Poly poly = Shape2d.createRect(tilePos, tileSize, new ShapeMode.AppendUnpack(new float[] {status}, wobbleFloats));
                 if (prevIndex.y != y || prevIndex.x + 1 != x) sbTiles.pushSeparatedPolygon(poly);
-                else sbTiles.pushPolygon(poly);
+                else if (get(prevIndex) == status) {  // a little manual optimisation
+                    sbTiles.pushRawVertices(new float[] {
+                            poly.points.get(2).x, poly.points.get(2).y, status, wobbleFloats.get(2)[0], wobbleFloats.get(2)[1],
+                            poly.points.get(3).x, poly.points.get(3).y, status, wobbleFloats.get(3)[0], wobbleFloats.get(3)[1]
+                    });
+                } else sbTiles.pushPolygon(poly);
                 prevIndex.set(x, y);
             }
         }
@@ -248,6 +271,6 @@ public class Maze {
         Renderer.draw(GL_TRIANGLE_STRIP, vaBg, sbBg.getVertexCount());
 
         shTiles.bind();
-        Renderer.draw(GL_TRIANGLE_STRIP, vaTiles, sbTiles.getVertexCount());
+        Renderer.draw(debugRender ? GL_LINE_STRIP : GL_TRIANGLE_STRIP, vaTiles, sbTiles.getVertexCount());
     }
 }
