@@ -7,8 +7,10 @@ import common.Runner;
 
 import java.util.ArrayList;
 
-public class SearchDepthFirst extends Runner {
-    public SearchDepthFirst(Maze maze, Game game) {
+public class SearchGreedyBestFirst extends Runner {
+    CellComparison comparison = (Cell c) -> (int) (c.pos.y + (maze.getGridSize() - c.pos.x));
+
+    public SearchGreedyBestFirst(Maze maze, Game game) {
         super(maze, game);
     }
 
@@ -26,6 +28,7 @@ public class SearchDepthFirst extends Runner {
         if (complete) return;
         super.performOperation();
         visitFocussingCells(array);
+        stackSort(comparison);
 
         if (stack.empty()) {
             finishSearch();

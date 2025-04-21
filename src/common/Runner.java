@@ -30,6 +30,10 @@ public abstract class Runner {
         }
     }
 
+    public interface CellComparison {
+        int compare(Cell cell);
+    }
+
     public int opNum = 0;
     public int frameNum = 0;
     public int opFrameNum = 0;
@@ -175,5 +179,41 @@ public abstract class Runner {
             maze.set(p.pos, Maze.FOCUSING);
             p = p.parent;
         }
+    }
+
+    public void visitCellAndParents(Cell cell) {
+        Cell p = cell;
+        while (p != null) {
+            array.add(p);
+            p = p.parent;
+        }
+    }
+
+    /** sorts smallest at the top */
+    public void stackSort(CellComparison comparison) {
+        if (!stack.isEmpty()) {
+            Cell c = stack.pop();
+//            int dist = (int) (c.pos.y + (maze.getGridSize() - c.pos.x));
+            int dist = comparison.compare(c);
+            stackSort(comparison);
+            stackInsert(dist, c, comparison);
+        }
+    }
+
+    private void stackInsert(int dist, Cell c, CellComparison comparison) {
+        if (stack.isEmpty()) {
+            stack.push(c);
+            return;
+        }
+
+        Cell otherC = stack.peek();
+//        int otherDist = (int) (otherC.pos.y + (maze.getGridSize() - otherC.pos.x));
+        int otherDist = comparison.compare(otherC);
+
+        if (dist > otherDist) {  // other dist is closer, put it nearer to the top
+            otherC = stack.pop();
+            stackInsert(dist, c, comparison);
+            stack.push(otherC);
+        } else stack.push(c);
     }
 }

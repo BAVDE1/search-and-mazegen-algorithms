@@ -39,7 +39,6 @@ public class SearchBreadthFirst extends Runner {
             return;
         }
 
-        // set focus on full branch
         maze.set(cell.pos, Maze.FOCUSING);
         focusOnCellParents(cell);
 
@@ -50,11 +49,6 @@ public class SearchBreadthFirst extends Runner {
             queue.add(c);
         }
 
-        // always switching current branch
-        Cell p = cell;
-        while (p != null) {
-            array.add(p);
-            p = p.parent;
-        }
+        visitCellAndParents(cell);
     }
 }

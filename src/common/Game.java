@@ -13,6 +13,7 @@ import mazeGen.*;
 import org.lwjgl.glfw.GLFW;
 import searching.SearchBreadthFirst;
 import searching.SearchDepthFirst;
+import searching.SearchGreedyBestFirst;
 
 import java.awt.*;
 
@@ -110,11 +111,11 @@ public class Game extends GameBase {
                 switch (key) {
                     case GLFW_KEY_ESCAPE -> glfwSetWindowShouldClose(window, true);
                     case GLFW_KEY_TAB -> maze.toggleDebugRender();
-                    case GLFW_KEY_1 -> navActionButtons.toggleBtn(actionPage, true);
-                    case GLFW_KEY_2 -> navActionButtons.toggleBtn(framesPage, true);
-                    case GLFW_KEY_3 -> navActionButtons.toggleBtn(mazePage, true);
-                    case GLFW_KEY_Q -> navAlgorithmButtons.toggleBtn(searchAlgorithmsButton, true);
-                    case GLFW_KEY_E -> navAlgorithmButtons.toggleBtn(genAlgorithmsButton, true);
+                    case GLFW_KEY_Q -> navActionButtons.toggleBtn(actionPage, true);
+                    case GLFW_KEY_W -> navActionButtons.toggleBtn(framesPage, true);
+                    case GLFW_KEY_E -> navActionButtons.toggleBtn(mazePage, true);
+                    case GLFW_KEY_A -> navAlgorithmButtons.toggleBtn(searchAlgorithmsButton, true);
+                    case GLFW_KEY_D -> navAlgorithmButtons.toggleBtn(genAlgorithmsButton, true);
                     case GLFW_KEY_I -> mazeRunner.nextFrame(true);
                     case GLFW_KEY_O -> updateRunnerStatus(mazeRunner, genMazeAction, "o");
                     case GLFW_KEY_P -> resetMaze();
@@ -181,9 +182,9 @@ public class Game extends GameBase {
         // buttons
         navActionButtons.setupBufferObjects();
         navActionButtons.radioToggles = true;
-        actionPage = new ToggleButton(new Vec2(270, 25), new Vec2(120, 30), "action (1)");
-        framesPage = new ToggleButton(new Vec2(270, 65), new Vec2(120, 30), "frames (2)");
-        mazePage = new ToggleButton(new Vec2(270, 105), new Vec2(120, 30), "maze (3)");
+        actionPage = new ToggleButton(new Vec2(270, 25), new Vec2(120, 30), "action (q)");
+        framesPage = new ToggleButton(new Vec2(270, 65), new Vec2(120, 30), "frames (w)");
+        mazePage = new ToggleButton(new Vec2(270, 105), new Vec2(120, 30), "maze (e)");
         actionPage.addCallback((Button btn) -> openActionMenu());
         framesPage.addCallback((Button btn) -> openFramesMenu());
         mazePage.addCallback((Button btn) -> openMazeMenu());
@@ -207,8 +208,8 @@ public class Game extends GameBase {
 
         navAlgorithmButtons.setupBufferObjects();
         navAlgorithmButtons.radioToggles = true;
-        searchAlgorithmsButton = new ToggleButton(new Vec2(25, 30), new Vec2(200, 40), "search algorithm (q)");
-        genAlgorithmsButton = new ToggleButton(new Vec2(25, 90), new Vec2(200, 40), "maze generation (e)");
+        searchAlgorithmsButton = new ToggleButton(new Vec2(25, 30), new Vec2(200, 40), "search algorithm (a)");
+        genAlgorithmsButton = new ToggleButton(new Vec2(25, 90), new Vec2(200, 40), "maze generation (d)");
         searchAlgorithmsButton.addCallback((Button btn) -> {
             ToggleButton toggleButton = (ToggleButton) btn;
             mazeGenerationButtons.setVisible(!toggleButton.toggled);
@@ -241,7 +242,7 @@ public class Game extends GameBase {
         ToggleButton bf = new ToggleButton(new Vec2(25, 290), new Vec2(200, 40), "breadth first", Color.YELLOW);
         bf.addCallback((Button btn) -> changeSearchRunner(new SearchBreadthFirst(maze, this), btn));
         ToggleButton gbf = new ToggleButton(new Vec2(25, 350), new Vec2(200, 40), "greedy best first", Color.YELLOW);
-        gbf.disabled = true;
+        gbf.addCallback((Button btn) -> changeSearchRunner(new SearchGreedyBestFirst(maze, this), btn));
         ToggleButton as = new ToggleButton(new Vec2(25, 410), new Vec2(200, 40), "a star", Color.YELLOW);
         as.disabled = true;
         searchAlgorithmButtons.addButton(df, bf, as, gbf);
@@ -454,7 +455,7 @@ public class Game extends GameBase {
         searchMazeAction.text = "start search [k]";
         actionButtons.hasChanged = true;
         searchRunner.reset();
-        maze.emptyVisitedMazeTiles();
+        if (maze.searchable) maze.emptyVisitedMazeTiles();
     }
 
     public void mazeGenerationCompleted() {
