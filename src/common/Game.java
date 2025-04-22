@@ -230,7 +230,7 @@ public class Game extends GameBase {
         ToggleButton w = new ToggleButton(new Vec2(25, 410), new Vec2(200, 40), "wilson", Color.YELLOW);
         w.disabled = true;
         ToggleButton rd = new ToggleButton(new Vec2(25, 470), new Vec2(200, 40), "recursive division", Color.YELLOW);
-        rd.disabled = true;
+        rp.addCallback((Button btn) -> changeMazeRunner(new MazeDivision(maze, this), btn));
         ToggleButton ft = new ToggleButton(new Vec2(25, 530), new Vec2(200, 40), "fractal tesselation", Color.YELLOW);
         ft.addCallback((Button btn) -> changeMazeRunner(new MazeFractal(maze, this), btn));
         mazeGenerationButtons.addButton(rdf, rk, rp, w, rd, ft);
