@@ -11,6 +11,7 @@ import boilerplate.rendering.text.TextRenderer;
 import boilerplate.utility.Vec2;
 import mazeGen.*;
 import org.lwjgl.glfw.GLFW;
+import searching.SearchAStar;
 import searching.SearchBreadthFirst;
 import searching.SearchDepthFirst;
 import searching.SearchGreedyBestFirst;
@@ -244,7 +245,7 @@ public class Game extends GameBase {
         ToggleButton gbf = new ToggleButton(new Vec2(25, 350), new Vec2(200, 40), "greedy best first", Color.YELLOW);
         gbf.addCallback((Button btn) -> changeSearchRunner(new SearchGreedyBestFirst(maze, this), btn));
         ToggleButton as = new ToggleButton(new Vec2(25, 410), new Vec2(200, 40), "a star", Color.YELLOW);
-        as.disabled = true;
+        as.addCallback((Button btn) -> changeSearchRunner(new SearchAStar(maze, this), btn));
         searchAlgorithmButtons.addButton(df, bf, as, gbf);
         searchAlgorithmButtons.toggleBtn(df, true);
 

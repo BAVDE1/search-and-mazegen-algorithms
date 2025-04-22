@@ -13,6 +13,7 @@ public abstract class Runner {
         public Vec2 pos;
         public Vec2 inBetweenCell;
         public int direction;
+        public int step = 0;
 
         public Cell parent = null;
 
