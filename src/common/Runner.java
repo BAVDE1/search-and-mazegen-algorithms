@@ -174,6 +174,13 @@ public abstract class Runner {
         }
     }
 
+    public void wallFocussingCells(ArrayList<Cell> theArray) {
+        if (!theArray.isEmpty()) {
+            for (Cell c : theArray) maze.set(c.pos, Maze.WALL);
+            theArray.clear();
+        }
+    }
+
     public void focusOnCellParents(Cell cell) {
         Cell p = cell.parent;
         while (p != null) {

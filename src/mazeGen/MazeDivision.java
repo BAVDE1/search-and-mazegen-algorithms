@@ -38,6 +38,7 @@ public class MazeDivision extends Runner {
     @Override
     public void reset() {
         super.reset();
+        areaQueue.clear();
     }
 
     private void emptyMaze() {
@@ -51,70 +52,103 @@ public class MazeDivision extends Runner {
     @Override
     public void performOperation() {
         super.performOperation();
-        clearFocussingCells(array);
 
         // create 3 holes in the walls
-        if (opNum % 2 == 1) {
+        if (opNum % 2 == 0) {
+            wallFocussingCells(array);
             int excludeSide = random.nextInt(0, 4);
 
             for (int side = 0; side < 4; side++) {
                 if (side == excludeSide) continue;
 
                 Vec2 pos;
+                boolean retry;
                 do {
+                    retry = false;
                     switch (side) {
                         case 0 -> {  // top
                             int y = random.nextInt((int) focussingArea.pos.y, (int) focussingArea.cellWithin.pos.y);
+                            if (y % 2 == 1) retry = true;
                             pos = new Vec2(focussingArea.cellWithin.pos.x, y);
                         }
                         case 1 -> {  // right
                             int x = random.nextInt((int) focussingArea.cellWithin.pos.x + 1, (int) (focussingArea.pos.x + focussingArea.size.x));
+                            if (x % 2 == 1) retry = true;
                             pos = new Vec2(x, focussingArea.cellWithin.pos.y);
                         }
                         case 2 -> {  // bottom
                             int y = random.nextInt((int) focussingArea.cellWithin.pos.y + 1, (int) (focussingArea.pos.y + focussingArea.size.y));
+                            if (y % 2 == 1) retry = true;
                             pos = new Vec2(focussingArea.cellWithin.pos.x, y);
                         }
                         default -> {  // left
                             int x = random.nextInt((int) focussingArea.pos.x, (int) focussingArea.cellWithin.pos.x);
+                            if (x % 2 == 1) retry = true;
                             pos = new Vec2(x, focussingArea.cellWithin.pos.y);
                         }
                     }
-                } while (maze.getNonWallNeighbors((int) pos.x, (int) pos.y, 1).size() < 2);  // needs to make a proper path
-                maze.set(pos, Maze.WALL);
+                } while (retry || maze.getNonWallNeighbors((int) pos.x, (int) pos.y, 1).size() < 2);  // needs to make a proper path
+                maze.set(pos, Maze.FOCUSING);
                 array.add(new Cell(pos));
             }
+            focussingArea = null;
+            return;
+        }
+
+        clearFocussingCells(array);
+        if (areaQueue.isEmpty()) {
+            finishMaze();
             return;
         }
 
         // new area
         focussingArea = areaQueue.remove();
-        int x = random.nextInt();
-        int y = random.nextInt();
-        focussingArea.cellWithin = new Cell(new Vec2(x, y));
+        int cellX = random.nextInt((int) focussingArea.pos.x, (int) (focussingArea.pos.x + focussingArea.size.x) - 1);
+        int cellY = random.nextInt((int) focussingArea.pos.y, (int) (focussingArea.pos.y + focussingArea.size.y) - 1);
+        Vec2 cellPos = new Vec2(cellX, cellY).sub(cellX % 2, cellY % 2).add(1);
+        focussingArea.cellWithin = new Cell(cellPos);
 
-        // make walls
-
-        int s = maze.get(onX, onY);
-        Vec2 pos = new Vec2(
-                (onCopy != 2 ? fractSize : 0) + onX,
-                (onCopy > 1 ? fractSize : 0) + onY
-        );
-        maze.set(pos, s == Maze.EMPTY ? Maze.FOCUSING : s);
-        if (s == Maze.EMPTY) array.add(new Cell(pos));
-
-        onX++;
-        if (onX >= fractSize-1) {
-            onY++;
-            onX = 0;
+        // make new crossed walls
+        for (int x = (int) focussingArea.pos.x; x < focussingArea.pos.x + focussingArea.size.x; x++) {
+            Vec2 pos = new Vec2(x, (int) cellPos.y);
+            maze.set(pos, Maze.FOCUSING);
+            array.add(new Cell(pos));
         }
 
-        if (onY >= fractSize-1 && onCopy < 4) {
-            onCopy++;
-            onX = 0;
-            onY = 0;
+        for (int y = (int) focussingArea.pos.y; y < focussingArea.pos.y + focussingArea.size.y; y++) {
+            Vec2 pos = new Vec2((int) cellPos.x, y);
+            maze.set(pos, Maze.FOCUSING);
+            array.add(new Cell(pos));
         }
 
-        if (fractSize >= maze.getGridSize()) finishMaze();
+        // add newly created areas
+        for (int quater = 0; quater < 4; quater++) {
+            switch (quater) {
+                case 0 -> {  // top left
+                    int areaX = (int) (cellPos.x - focussingArea.pos.x);
+                    int areaY = (int) (cellPos.y - focussingArea.pos.y);
+                    if (areaX == 1 || areaY == 1) continue;
+                    areaQueue.add(new Area(focussingArea.pos, new Vec2(areaX, areaY)));
+                }
+                case 1 -> {  // top right
+                    int areaX = (int) ((focussingArea.pos.x + focussingArea.size.x) - cellPos.x - 1);
+                    int areaY = (int) (cellPos.y - focussingArea.pos.y);
+                    if (areaX == 1 || areaY == 1) continue;
+                    areaQueue.add(new Area(new Vec2(cellPos.x + 1, focussingArea.pos.y), new Vec2(areaX, areaY)));
+                }
+                case 2 -> {  // bottom left
+                    int areaX = (int) (cellPos.x - focussingArea.pos.x);
+                    int areaY = (int) ((focussingArea.pos.y + focussingArea.size.y) - cellPos.y - 1);
+                    if (areaX == 1 || areaY == 1) continue;
+                    areaQueue.add(new Area(new Vec2(focussingArea.pos.x, cellPos.y + 1), new Vec2(areaX, areaY)));
+                }
+                default -> {  // bottom right
+                    int areaX = (int) ((focussingArea.pos.x + focussingArea.size.x) - cellPos.x - 1);
+                    int areaY = (int) ((focussingArea.pos.y + focussingArea.size.y) - cellPos.y - 1);
+                    if (areaX == 1 || areaY == 1) continue;
+                    areaQueue.add(new Area(new Vec2(cellPos.x + 1, cellPos.y + 1), new Vec2(areaX, areaY)));
+                }
+            }
+        }
     }
 }

@@ -61,6 +61,7 @@ public class Game extends GameBase {
     TextRenderer.TextObject selectedAlgorithms;
     TextRenderer.TextObject algorithmDetails;
 
+    boolean autoRun = true;
     boolean useFPO = true;
     Runner mazeRunner;
     Runner searchRunner;
@@ -186,9 +187,9 @@ public class Game extends GameBase {
         actionPage = new ToggleButton(new Vec2(270, 25), new Vec2(120, 30), "action (q)");
         framesPage = new ToggleButton(new Vec2(270, 65), new Vec2(120, 30), "frames (w)");
         mazePage = new ToggleButton(new Vec2(270, 105), new Vec2(120, 30), "maze (e)");
-        actionPage.addCallback((Button btn) -> openActionMenu());
-        framesPage.addCallback((Button btn) -> openFramesMenu());
-        mazePage.addCallback((Button btn) -> openMazeMenu());
+        actionPage.addCallback((Button _) -> openActionMenu());
+        framesPage.addCallback((Button _) -> openFramesMenu());
+        mazePage.addCallback((Button _) -> openMazeMenu());
         navActionButtons.addButton(actionPage, framesPage, mazePage);
         navActionButtons.toggleBtn(actionPage, true);
 
@@ -203,8 +204,8 @@ public class Game extends GameBase {
             updateRunnerStatus(searchRunner, btn, "k");
         });
         genMazeAction.addCallback((Button btn) -> updateRunnerStatus(mazeRunner, btn, "o"));
-        clearMaze.addCallback((Button btn) -> resetMaze());
-        clearSearch.addCallback((Button btn) -> resetSearch());
+        clearMaze.addCallback((Button _) -> resetMaze());
+        clearSearch.addCallback((Button _) -> resetSearch());
         actionButtons.addButton(searchMazeAction, clearSearch, genMazeAction, clearMaze);
 
         navAlgorithmButtons.setupBufferObjects();
@@ -255,24 +256,24 @@ public class Game extends GameBase {
         mazeSizeInput.barRangeWidth = 250;
         mazeSizeInput.oddOnly = true;
         InputRange mazeWobble = new InputRange(new Vec2(850, 20), "wobble", (int) maze.wobbleFrequency, 0, 15, Color.YELLOW);
-        mazeSizeInput.addCallback((Input input, String val) -> {
+        mazeSizeInput.addCallback((Input _, String val) -> {
             maze.setGridSize(Integer.parseInt(val));
             resetMaze();
         });
-        mazeWobble.addCallback((Input input, String val) -> maze.setWobbleFrequency(Float.parseFloat(val)));
+        mazeWobble.addCallback((Input _, String val) -> maze.setWobbleFrequency(Float.parseFloat(val)));
         mazeInputs.addInput(mazeSizeInput, mazeWobble);
         mazeInputs.setVisible(false);
 
         framesInputs.setupBufferObjects();
-        InputRange opf = new InputRange(new Vec2(550, 20), "op / frames", 1, 0, 20, Color.YELLOW);
-        opf.barRangeWidth = 150;
-        opf.addCallback((Input input, String val) -> {
+        InputRange opf = new InputRange(new Vec2(640, 20), "op / frames", 1, 0, 20, Color.YELLOW);
+        opf.barRangeWidth = 110;
+        opf.addCallback((Input _, String val) -> {
             mazeRunner.opPerFrames = Integer.parseInt(val);
             searchRunner.opPerFrames = mazeRunner.opPerFrames;
         });
-        InputRange fpo = new InputRange(new Vec2(850, 20), "frames / op", 1, 0, 20, Color.YELLOW);
+        InputRange fpo = new InputRange(new Vec2(880, 20), "frames / op", 1, 0, 20, Color.YELLOW);
         fpo.barRangeWidth = opf.barRangeWidth;
-        fpo.addCallback((Input input, String val) -> {
+        fpo.addCallback((Input _, String val) -> {
             mazeRunner.framesPerOp = Integer.parseInt(val);
             searchRunner.framesPerOp = mazeRunner.framesPerOp;
         });
@@ -281,8 +282,11 @@ public class Game extends GameBase {
         framesInputs.setVisible(false);
 
         framesButtons.setupBufferObjects();
-        Button doFPO = new Button(new Vec2(674, 50), new Vec2(50), "->", Color.YELLOW);
-        doFPO.addCallback((Button btn) -> {
+        ToggleButton autoRunBtn = new ToggleButton(new Vec2(425, 60), new Vec2(100, 40), "auto run", Color.YELLOW);
+        autoRunBtn.toggle(true);
+        autoRunBtn.addCallback((Button _) -> autoRun = !autoRun);
+        Button doFPO = new Button(new Vec2(735, 50), new Vec2(50), "->", Color.YELLOW);
+        doFPO.addCallback((Button _) -> {
             useFPO = !useFPO;
             doFPO.text = useFPO ? "->" : "<-";
             fpo.disabled = !useFPO;
@@ -293,7 +297,7 @@ public class Game extends GameBase {
             mazeRunner.useFPO = useFPO;
             searchRunner.useFPO = useFPO;
         });
-        framesButtons.addButton(doFPO);
+        framesButtons.addButton(doFPO, autoRunBtn);
 
         // separators
         separatorSh.autoInitializeShadersMulti("shaders/simple_colour.glsl");
@@ -398,8 +402,10 @@ public class Game extends GameBase {
     @Override
     public void mainLoop(double dt) {
         GLFW.glfwPollEvents();
-        mazeRunner.nextFrame();
-        searchRunner.nextFrame();
+        if (autoRun) {
+            mazeRunner.nextFrame();
+            searchRunner.nextFrame();
+        }
         updateAlgorithmDetails();
         render();
     }
