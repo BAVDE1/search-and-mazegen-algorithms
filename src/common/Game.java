@@ -417,19 +417,21 @@ public class Game extends GameBase {
             mazeSizeInput.roundToPow2 = newRunner instanceof MazeFractal;
             mazeSizeInput.revalidateValue();
         }
-        newRunner.useFPO = mazeRunner.useFPO;  // transfer settings
-        newRunner.opPerFrames = mazeRunner.opPerFrames;
-        newRunner.framesPerOp = mazeRunner.framesPerOp;
+        transferRunnerSettings(newRunner);
         mazeRunner = newRunner;
     }
 
     private void changeSearchRunner(Runner newRunner, Button btn) {
         if (!((ToggleButton) btn).toggled) return;
         resetSearch();
+        transferRunnerSettings(newRunner);
+        searchRunner = newRunner;
+    }
+
+    private void transferRunnerSettings(Runner newRunner) {
         newRunner.useFPO = mazeRunner.useFPO;  // transfer settings
         newRunner.opPerFrames = mazeRunner.opPerFrames;
         newRunner.framesPerOp = mazeRunner.framesPerOp;
-        searchRunner = newRunner;
     }
 
     private void updateRunnerStatus(Runner runner, Button btn, String shortcut) {
