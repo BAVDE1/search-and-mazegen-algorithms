@@ -218,6 +218,7 @@ public class Maze {
     }
 
     public void setWobbleFrequency(float val) {
+        if (wobbleFrequency != val && (val == 0 || wobbleFrequency == 0)) hasChanged = true;
         wobbleFrequency = val;
         ShaderHelper.uniform1f(shTiles, "wobbleFrequency", wobbleFrequency);
     }
@@ -235,11 +236,20 @@ public class Maze {
                 Vec2 tilePos = new Vec2(x, y).mul(tileSize).add(pos);
                 Shape2d.Poly poly = Shape2d.createRect(tilePos, tileSize, new ShapeMode.AppendUnpack(new float[] {status}, wobbleFloats));
                 if (prevIndex.y != y || prevIndex.x + 1 != x) sbTiles.pushSeparatedPolygon(poly);
-                else if (get(prevIndex) == status) {  // a little manual optimisation
-                    sbTiles.pushRawVertices(new float[] {
-                            poly.points.get(2).x, poly.points.get(2).y, status, wobbleFloats.get(2)[0], wobbleFloats.get(2)[1],
-                            poly.points.get(3).x, poly.points.get(3).y, status, wobbleFloats.get(3)[0], wobbleFloats.get(3)[1]
-                    });
+                else if (get(prevIndex) == status) {  // some optimisation
+                    if (wobbleFrequency == 0) {  // stretch the tile horizontally to cover more than one
+                        float[] verts = sbTiles.getSetVertices();
+                        float[] last2Verts = new float[10];
+                        System.arraycopy(verts, sbTiles.getFloatCount()-10, last2Verts, 0, 10);
+                        last2Verts[0] += tileSize.x;
+                        last2Verts[5] += tileSize.x;
+                        sbTiles.setFloatsUnsafe(last2Verts, sbTiles.getFloatCount()-10);
+                    } else {  // skip first 2 verts of tile (as they're already there from the last tile)
+                        sbTiles.pushRawVertices(new float[]{
+                                poly.points.get(2).x, poly.points.get(2).y, status, wobbleFloats.get(2)[0], wobbleFloats.get(2)[1],
+                                poly.points.get(3).x, poly.points.get(3).y, status, wobbleFloats.get(3)[0], wobbleFloats.get(3)[1]
+                        });
+                    }
                 } else sbTiles.pushPolygon(poly);
                 prevIndex.set(x, y);
             }

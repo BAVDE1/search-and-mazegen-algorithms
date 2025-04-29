@@ -123,6 +123,7 @@ public abstract class Runner {
         // instant complete
         if ((useFPO && framesPerOp == 0) || (!useFPO && opPerFrames == 0)) {
             while (!complete) performOperation();
+            return;
         }
 
         // frames between operations
