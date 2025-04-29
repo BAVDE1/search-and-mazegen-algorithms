@@ -238,11 +238,8 @@ public class Maze {
                 if (prevIndex.y != y || prevIndex.x + 1 != x) sbTiles.pushSeparatedPolygon(poly);
                 else if (get(prevIndex) == status) {  // some optimisation
                     if (wobbleFrequency == 0) {  // stretch the tile horizontally to cover more than one
-                        float[] verts = sbTiles.getSetVertices();
-                        float[] last2Verts = new float[10];
-                        System.arraycopy(verts, sbTiles.getFloatCount()-10, last2Verts, 0, 10);
-                        last2Verts[0] += tileSize.x;
-                        last2Verts[5] += tileSize.x;
+                        float[] last2Verts = sbTiles.getLastVertices(2);
+                        last2Verts[0] = last2Verts[5] += tileSize.x;
                         sbTiles.setFloatsUnsafe(last2Verts, sbTiles.getFloatCount()-10);
                     } else {  // skip first 2 verts of tile (as they're already there from the last tile)
                         sbTiles.pushRawVertices(new float[]{
