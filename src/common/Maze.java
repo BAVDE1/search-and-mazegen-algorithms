@@ -1,6 +1,9 @@
 package common;
 
 import boilerplate.rendering.*;
+import boilerplate.rendering.builders.BufferBuilder2f;
+import boilerplate.rendering.builders.Shape2d;
+import boilerplate.rendering.builders.ShapeMode;
 import boilerplate.utility.Vec2;
 
 import java.util.ArrayList;
@@ -73,7 +76,7 @@ public class Maze {
 
         int gridMargin = 40;
         sbBg.pushPolygon(Shape2d.createRect(pos.sub(gridMargin), size.add(gridMargin*2)));
-        vbBg.bufferSetData(sbBg);
+        vbBg.bufferData(sbBg);
         updateScaleUniforms();
         clearMaze();
     }
@@ -259,7 +262,7 @@ public class Maze {
         if (hasChanged) {
             sbTiles.clear();
             reBuildTilesBuffer();
-            vbTiles.bufferSetData(sbTiles);
+            vbTiles.bufferData(sbTiles);
             hasChanged = false;
         }
 

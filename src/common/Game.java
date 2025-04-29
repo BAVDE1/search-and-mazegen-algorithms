@@ -6,6 +6,9 @@ import boilerplate.common.GameBase;
 import boilerplate.common.TimeStepper;
 import boilerplate.common.Window;
 import boilerplate.rendering.*;
+import boilerplate.rendering.builders.BufferBuilder2f;
+import boilerplate.rendering.builders.Shape2d;
+import boilerplate.rendering.builders.ShapeMode;
 import boilerplate.rendering.text.FontManager;
 import boilerplate.rendering.text.TextRenderer;
 import boilerplate.utility.Vec2;
@@ -319,7 +322,7 @@ public class Game extends GameBase {
         separatorSb.pushPolygon(Shape2d.createRectOutline(new Vec2(8), new Vec2(Constants.SCREEN_SIZE).sub(16), 2, mode));
         separatorSb.pushSeparatedPolygon(Shape2d.createLine(new Vec2(260, 150), new Vec2(Constants.SCREEN_SIZE.width - 16, 150), 4, mode));
         separatorSb.pushSeparatedPolygon(Shape2d.createLine(new Vec2(250, 16), new Vec2(250, Constants.SCREEN_SIZE.height - 16), 4, mode));
-        separatorVb.bufferSetData(separatorSb);
+        separatorVb.bufferData(separatorSb);
     }
 
     private void updateAlgorithmDetails() {

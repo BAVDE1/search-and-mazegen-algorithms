@@ -1,8 +1,8 @@
 package Interactables;
 
-import boilerplate.rendering.BufferBuilder2f;
-import boilerplate.rendering.Shape2d;
-import boilerplate.rendering.ShapeMode;
+import boilerplate.rendering.builders.BufferBuilder2f;
+import boilerplate.rendering.builders.Shape2d;
+import boilerplate.rendering.builders.ShapeMode;
 import boilerplate.utility.Vec2;
 
 import java.awt.*;

@@ -1,9 +1,9 @@
 package Interactables;
 
 import boilerplate.rendering.*;
+import boilerplate.rendering.builders.BufferBuilder2f;
 import boilerplate.rendering.text.FontManager;
 import common.Constants;
-import org.lwjgl.opengl.ARBShaderStorageBufferObject;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.opengl.GL11.GL_TRIANGLE_STRIP;
@@ -58,7 +58,7 @@ public abstract class InteractableGroup {
             hasChanged = false;
             sb.clear();
             reBuildBuffer();
-            vb.bufferSetData(sb);
+            vb.bufferData(sb);
         }
 
         // render buffer!
