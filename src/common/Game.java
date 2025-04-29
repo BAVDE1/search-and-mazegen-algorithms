@@ -2,6 +2,7 @@ package common;
 
 import Interactables.*;
 import Interactables.Button;
+import boilerplate.common.BoilerplateConstants;
 import boilerplate.common.GameBase;
 import boilerplate.common.TimeStepper;
 import boilerplate.common.Window;
@@ -71,6 +72,7 @@ public class Game extends GameBase {
 
     @Override
     public void start() {
+        BoilerplateConstants.BUFF_SIZE_MAX = BoilerplateConstants.BUFF_SIZE_LARGE * 32;
         this.timeStarted = (double)System.currentTimeMillis();
         TimeStepper.startTimeStepper(1f / 60f, this);
     }
@@ -114,7 +116,7 @@ public class Game extends GameBase {
                 if (key >= 0 && key < heldKeys.length) heldKeys[key] = 1;
 
                 switch (key) {
-                    case GLFW_KEY_ESCAPE -> glfwSetWindowShouldClose(window, true);
+                    case GLFW_KEY_ESCAPE -> this.window.setToClose();
                     case GLFW_KEY_TAB -> maze.toggleDebugRender();
                     case GLFW_KEY_Q -> navActionButtons.toggleBtn(actionPage, true);
                     case GLFW_KEY_W -> navActionButtons.toggleBtn(framesPage, true);

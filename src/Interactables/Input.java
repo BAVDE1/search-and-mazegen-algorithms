@@ -113,7 +113,7 @@ public class Input {
         if (roundToPow2) {
             int base = 1;
             while (base < val && base < rangeMax) {
-                if (val - base < Math.floor(base / 2f) && base > rangeMin) break;
+                if ((val - base < Math.floor(base / 2f) && base > rangeMin) || base * 2 > rangeMax) break;
                 base *= 2;
             }
             val = base;
