@@ -278,24 +278,22 @@ public class Maze {
         int offX = x;
         int offY = y;
 
-        while(get(offX, offY) == status && mergeGrid[offY][offX] == UNMERGED) {
-            while (get(offX, offY) == status && mergeGrid[offY][offX] == UNMERGED) {
+        while(get(offX, offY) == status && mergeGrid[offY][offX] == UNMERGED) {  // y
+            while (get(offX, offY) == status && mergeGrid[offY][offX] == UNMERGED) {  // x
                 offX++;
                 if (maxX != null && offX > maxX) break;  // early out
             }
-            if (maxX == null) maxX = offX;  // first line sets width of rect
+            if (maxX == null) maxX = offX;  // first line sets the width of the rect
             else if (maxX != offX) break;
 
-            // set all in line as merged
+            // set all tiles in line as merged
             for (int setX = x; setX < maxX; setX++) mergeGrid[offY][setX] = MERGED;
 
-            // next line
-            offY++;
+            offY++;  // next line
             offX = x;
         }
 
-        Shape2d.Poly p = Shape2d.createRect(tilePos, new Vec2(maxX - x, offY - y).mul(tileSize), mode);
-        sbTiles.pushSeparatedPolygon(p);
+        sbTiles.pushSeparatedPolygon(Shape2d.createRect(tilePos, new Vec2(maxX - x, offY - y).mul(tileSize), mode));
     }
 
     public void render() {
