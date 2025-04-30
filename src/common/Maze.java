@@ -21,6 +21,9 @@ public class Maze {
     public static final int START = 4;
     public static final int END = 5;
 
+    private static final int UNMERGED = 0;
+    private static final int MERGED = 1;
+
     public interface WallComparison {
         boolean compare(int status);
     }
@@ -34,6 +37,7 @@ public class Maze {
     public static final int MAX_GRID_SIZE = 99;
     private int gridSize = 15;
     private int[][] mazeGrid = new int[gridSize][gridSize];
+    private int[][] mergeGrid = new int[gridSize][gridSize];
 
     private final ShaderHelper shBg = new ShaderHelper();
     private final ShaderHelper shTiles = new ShaderHelper();
@@ -83,6 +87,7 @@ public class Maze {
 
     public void clearMaze() {
         mazeGrid = new int[gridSize][gridSize];
+        mergeGrid = new int[gridSize][gridSize];
         hasChanged = true;
         searchable = false;
     }
@@ -224,31 +229,33 @@ public class Maze {
     }
 
     public void reBuildTilesBuffer() {
+        mergeGrid = new int[gridSize][gridSize];
         Vec2 tileSize = size.div(gridSize);
-        Vec2 prevIndex = new Vec2();
+        Vec2 prevIndex = null;
 
         for (int y = 0; y < gridSize; y++) {
             for (int x = 0; x < gridSize; x++) {
                 int status = get(x, y);
-                if (status == WALL) continue;
+                if (status == WALL || mergeGrid[y][x] == MERGED) continue;
 
                 List<float[]> wobbleFloats = getWobbleFloats(x, y);
                 Vec2 tilePos = new Vec2(x, y).mul(tileSize).add(pos);
-                Shape2d.Poly poly = Shape2d.createRect(tilePos, tileSize, new ShapeMode.AppendUnpack(new float[] {status}, wobbleFloats));
-                if (prevIndex.y != y || prevIndex.x + 1 != x) sbTiles.pushSeparatedPolygon(poly);
-                else if (get(prevIndex) == status) {  // some optimisation
-                    if (wobbleFrequency == 0) {  // stretch the tile horizontally to cover more than one
-                        float[] last2Verts = sbTiles.getLastVertices(2);
-                        last2Verts[0] = last2Verts[5] += tileSize.x;
-                        sbTiles.setFloatsUnsafe(last2Verts, sbTiles.getFloatCount()-10);
-                    } else {  // skip first 2 verts of tile (as they're already there from the last tile)
-                        sbTiles.pushRawVertices(new float[]{
+                ShapeMode mode = new ShapeMode.AppendUnpack(new float[] {status}, wobbleFloats);
+                Shape2d.Poly poly = Shape2d.createRect(tilePos, tileSize, mode);
+
+                // various different ways of adding the tile to the buffer (optimised)
+                if (wobbleFrequency == 0) doTileMerge(x, y, status, tilePos, tileSize, mode);
+                else if (prevIndex != null) {
+                    if (prevIndex.y != y || prevIndex.x + 1 != x) sbTiles.pushSeparatedPolygon(poly);
+                    else if (get(prevIndex) == status) {  // skip first 2 verts of tile (as they're already there from the last tile)
+                        sbTiles.pushRawVertices(new float[] {
                                 poly.points.get(2).x, poly.points.get(2).y, status, wobbleFloats.get(2)[0], wobbleFloats.get(2)[1],
                                 poly.points.get(3).x, poly.points.get(3).y, status, wobbleFloats.get(3)[0], wobbleFloats.get(3)[1]
                         });
-                    }
+                    } else sbTiles.pushPolygon(poly);
                 } else sbTiles.pushPolygon(poly);
-                prevIndex.set(x, y);
+
+                prevIndex = new Vec2(x, y);
             }
         }
     }
@@ -263,6 +270,32 @@ public class Maze {
         else wobbleIndexes = x % 2 == 0 ? wobbleFloatsC : wobbleFloatsD;
         for (float[] floats : wobbleIndexes) floats[0] = wobbleSpeed;
         return wobbleIndexes;
+    }
+
+    /** the ultimate optimisation */
+    private void doTileMerge(int x, int y, int status, Vec2 tilePos, Vec2 tileSize, ShapeMode mode) {
+        Integer maxX = null;
+        int offX = x;
+        int offY = y;
+
+        while(get(offX, offY) == status && mergeGrid[offY][offX] == UNMERGED) {
+            while (get(offX, offY) == status && mergeGrid[offY][offX] == UNMERGED) {
+                offX++;
+                if (maxX != null && offX > maxX) break;  // early out
+            }
+            if (maxX == null) maxX = offX;  // first line sets width of rect
+            else if (maxX != offX) break;
+
+            // set all in line as merged
+            for (int setX = x; setX < maxX; setX++) mergeGrid[offY][setX] = MERGED;
+
+            // next line
+            offY++;
+            offX = x;
+        }
+
+        Shape2d.Poly p = Shape2d.createRect(tilePos, new Vec2(maxX - x, offY - y).mul(tileSize), mode);
+        sbTiles.pushSeparatedPolygon(p);
     }
 
     public void render() {
