@@ -284,7 +284,7 @@ public class Maze {
                 if (maxX != null && offX > maxX) break;  // early out
             }
             if (maxX == null) maxX = offX;  // first line sets the width of the rect
-            else if (maxX != offX) break;
+            else if (maxX != offX) break;  // reached the end of this rect
 
             // set all tiles in line as merged
             for (int setX = x; setX < maxX; setX++) mergeGrid[offY][setX] = MERGED;
