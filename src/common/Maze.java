@@ -33,7 +33,7 @@ public class Maze {
     public Vec2 size = new Vec2(400);
     public boolean searchable = false;
 
-    public static final int MIN_GRID_SIZE = 5;
+    public static final int MIN_GRID_SIZE = 7;
     public static final int MAX_GRID_SIZE = 99;
     private int gridSize = 15;
     private int[][] mazeGrid = new int[gridSize][gridSize];
