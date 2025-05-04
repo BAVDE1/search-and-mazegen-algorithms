@@ -202,7 +202,6 @@ public abstract class Runner {
     public void stackSort(CellComparison comparison) {
         if (!stack.isEmpty()) {
             Cell c = stack.pop();
-//            int dist = (int) (c.pos.y + (maze.getGridSize() - c.pos.x));
             int dist = comparison.compare(c);
             stackSort(comparison);
             stackInsert(dist, c, comparison);
@@ -216,7 +215,6 @@ public abstract class Runner {
         }
 
         Cell otherC = stack.peek();
-//        int otherDist = (int) (otherC.pos.y + (maze.getGridSize() - otherC.pos.x));
         int otherDist = comparison.compare(otherC);
 
         if (dist > otherDist) {  // other dist is closer, put it nearer to the top
