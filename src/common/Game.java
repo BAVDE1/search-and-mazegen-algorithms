@@ -123,10 +123,14 @@ public class Game extends GameBase {
                     case GLFW_KEY_E -> navActionButtons.toggleBtn(mazePage, true);
                     case GLFW_KEY_A -> navAlgorithmButtons.toggleBtn(searchAlgorithmsButton, true);
                     case GLFW_KEY_D -> navAlgorithmButtons.toggleBtn(genAlgorithmsButton, true);
-                    case GLFW_KEY_I -> mazeRunner.nextFrame(true);
+                    case GLFW_KEY_I -> {
+                        if (mazeRunner.running) mazeRunner.nextFrame(true);
+                    }
                     case GLFW_KEY_O -> updateRunnerStatus(mazeRunner, genMazeAction, "o");
                     case GLFW_KEY_P -> resetMaze();
-                    case GLFW_KEY_J -> searchRunner.nextFrame(true);
+                    case GLFW_KEY_J -> {
+                        if (searchRunner.running) searchRunner.nextFrame(true);
+                    }
                     case GLFW_KEY_K -> {
                         if (!maze.searchable) return;
                         updateRunnerStatus(searchRunner, searchMazeAction, "k");
