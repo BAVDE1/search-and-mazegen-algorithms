@@ -3,18 +3,17 @@
 
 layout(location = 0) in vec2 pos;
 layout(location = 1) in float status;
-layout(location = 2) in float wobbleSpeed;
-layout(location = 3) in float wobbleIndex;
 
 uniform mat4 projectionMatrix;
 uniform float wobbleFrequency;
+uniform float wobbleSpeed;
 uniform float time;
 
 out vec3 v_colour;
 
 void main() {
     // wobble
-    float t = time * (5 * wobbleSpeed) + wobbleIndex;
+    float t = time * (5 * wobbleSpeed) + (pos.x + pos.y);
     vec2 wobble = vec2(sin(t));
     wobble.y += cos(t * 1.5);
     wobble *= wobbleFrequency * int(wobbleSpeed > 0.001);  // yes or no

@@ -261,16 +261,18 @@ public class Game extends GameBase {
 
         // inputs
         mazeInputs.setupBufferObjects();
-        mazeSizeInput = new InputRange(new Vec2(600, 20), "maze size", maze.getGridSize(), Maze.MIN_GRID_SIZE, Maze.MAX_GRID_SIZE, Color.YELLOW);
-        mazeSizeInput.barRangeWidth = 250;
+        mazeSizeInput = new InputRange(new Vec2(540, 20), "maze size", maze.getGridSize(), Maze.MIN_GRID_SIZE, Maze.MAX_GRID_SIZE, Color.YELLOW);
+        mazeSizeInput.barRangeWidth = 200;
         mazeSizeInput.oddOnly = true;
-        InputRange mazeWobble = new InputRange(new Vec2(850, 20), "wobble", (int) maze.wobbleFrequency, 0, 15, Color.YELLOW);
         mazeSizeInput.addCallback((Input _, String val) -> {
             maze.setGridSize(Integer.parseInt(val));
             resetMaze();
         });
-        mazeWobble.addCallback((Input _, String val) -> maze.setWobbleFrequency(Float.parseFloat(val)));
-        mazeInputs.addInput(mazeSizeInput, mazeWobble);
+        InputRange mazeWobbleFreq = new InputRange(new Vec2(740, 20), "freq", (int) maze.wobbleFrequency, 0, 15, Color.YELLOW);
+        mazeWobbleFreq.addCallback((Input _, String val) -> maze.setWobbleFrequency(Float.parseFloat(val)));
+        InputRange mazeWobbleSpeed = new InputRange(new Vec2(880, 20), "speed", (int) maze.wobbleSpeed, 0, 15, Color.YELLOW);
+        mazeWobbleSpeed.addCallback((Input _, String val) -> maze.setWobbleSpeed(Float.parseFloat(val)));
+        mazeInputs.addInput(mazeSizeInput, mazeWobbleFreq, mazeWobbleSpeed);
         mazeInputs.setVisible(false);
 
         framesInputs.setupBufferObjects();

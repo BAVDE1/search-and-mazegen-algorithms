@@ -50,12 +50,13 @@ public class Maze {
     public boolean hasChanged = true;
 
     public float wobbleFrequency = 1;
-    private static final float wobbleSpeed = .5f;
+    public float wobbleSpeed = 1;
 
     public void setupBufferObjects() {
         shBg.autoInitializeShadersMulti("shaders/maze_bg.glsl");
         shTiles.autoInitializeShadersMulti("shaders/maze_tiles.glsl");
         setWobbleFrequency(wobbleFrequency);
+        setWobbleSpeed(wobbleSpeed);
         setGridSize(gridSize);
         ShaderHelper.uniformResolutionData(shBg, Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
         ShaderHelper.uniformResolutionData(shTiles, Constants.SCREEN_SIZE, Constants.PROJECTION_MATRIX);
@@ -73,8 +74,6 @@ public class Maze {
         VertexArray.Layout spaceLayout = new VertexArray.Layout();
         spaceLayout.pushFloat(2);  // pos
         spaceLayout.pushFloat(1);  // status
-        spaceLayout.pushFloat(1);  // wobble speed
-        spaceLayout.pushFloat(1);  // wobble index
         vaTiles.pushBuffer(vbTiles, spaceLayout);
         sbTiles.setAdditionalVertFloats(spaceLayout.getTotalItems() - 2);  // -pos
 
@@ -228,6 +227,12 @@ public class Maze {
         ShaderHelper.uniform1f(shTiles, "wobbleFrequency", wobbleFrequency);
     }
 
+    public void setWobbleSpeed(float val) {
+        if (wobbleSpeed != val && (val == 0 || wobbleSpeed == 0)) hasChanged = true;
+        wobbleSpeed = val;
+        ShaderHelper.uniform1f(shTiles, "wobbleSpeed", wobbleSpeed);
+    }
+
     public void reBuildTilesBuffer() {
         mergeGrid = new int[gridSize][gridSize];
         Vec2 tileSize = size.div(gridSize);
@@ -238,19 +243,18 @@ public class Maze {
                 int status = get(x, y);
                 if (status == WALL || mergeGrid[y][x] == MERGED) continue;
 
-                List<float[]> wobbleFloats = getWobbleFloats(x, y);
                 Vec2 tilePos = new Vec2(x, y).mul(tileSize).add(pos);
-                ShapeMode mode = new ShapeMode.AppendUnpack(new float[] {status}, wobbleFloats);
+                ShapeMode mode = new ShapeMode.Append(new float[] {status});
                 Shape2d.Poly poly = Shape2d.createRect(tilePos, tileSize, mode);
 
                 // various different ways of adding the tile to the buffer (optimised)
-                if (wobbleFrequency == 0) doTileMerge(x, y, status, tilePos, tileSize, mode);
+                if (wobbleFrequency == 0 || wobbleSpeed == 0) doTileMerge(x, y, status, tilePos, tileSize, mode);
                 else if (prevIndex != null) {
                     if (prevIndex.y != y || prevIndex.x + 1 != x) sbTiles.pushSeparatedPolygon(poly);
                     else if (get(prevIndex) == status) {  // skip first 2 verts of tile (as they're already there from the last tile)
                         sbTiles.pushRawVertices(new float[] {
-                                poly.points.get(2).x, poly.points.get(2).y, status, wobbleFloats.get(2)[0], wobbleFloats.get(2)[1],
-                                poly.points.get(3).x, poly.points.get(3).y, status, wobbleFloats.get(3)[0], wobbleFloats.get(3)[1]
+                                poly.points.get(2).x, poly.points.get(2).y, status,
+                                poly.points.get(3).x, poly.points.get(3).y, status
                         });
                     } else sbTiles.pushPolygon(poly);
                 } else sbTiles.pushPolygon(poly);
@@ -258,18 +262,6 @@ public class Maze {
                 prevIndex = new Vec2(x, y);
             }
         }
-    }
-
-    private static final List<float[]> wobbleFloatsA = List.of(new float[]{0, 0}, new float[]{0, 1}, new float[]{0, 2}, new float[]{0, 3});
-    private static final List<float[]> wobbleFloatsB = List.of(new float[]{0, 2}, new float[]{0, 3}, new float[]{0, 0}, new float[]{0, 1});
-    private static final List<float[]> wobbleFloatsC = List.of(new float[]{0, 1}, new float[]{0, 0}, new float[]{0, 3}, new float[]{0, 2});
-    private static final List<float[]> wobbleFloatsD = List.of(new float[]{0, 3}, new float[]{0, 2}, new float[]{0, 1}, new float[]{0, 0});
-    private static List<float[]> getWobbleFloats(int x, int y) {
-        List<float[]> wobbleIndexes;
-        if (y % 2 == 0) wobbleIndexes = x % 2 == 0 ? wobbleFloatsA : wobbleFloatsB;
-        else wobbleIndexes = x % 2 == 0 ? wobbleFloatsC : wobbleFloatsD;
-        for (float[] floats : wobbleIndexes) floats[0] = wobbleSpeed;
-        return wobbleIndexes;
     }
 
     /** the ultimate optimisation */
